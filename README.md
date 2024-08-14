@@ -19,7 +19,7 @@
   ```json
   {
     "ConnectionStrings": {
-      "DefaultConnection": "Server=your_server_name;Database=your_database_name;User Id=your_username;Password=your_password;"
+      "Capstone": "Data Source=your_server_name;Initial Catalog=CapstoneAuctioneer;Integrated Security=True; TrustServerCertificate=True"
     }
   }
 
