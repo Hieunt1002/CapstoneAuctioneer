@@ -4,25 +4,7 @@
 ## 1. Mở Visual Studio
 
 - Khởi động Visual Studio và mở dự án mà bạn muốn cập nhật cơ sở dữ liệu.
-
-## 2. Mở Package Manager Console
-
-- Để mở **Package Manager Console**, bạn thực hiện các bước sau:
-  1. Trong Visual Studio, chọn `Tools` trên thanh công cụ.
-  2. Chọn `NuGet Package Manager`.
-  3. Chọn `Package Manager Console`.
-
-  Hoặc bạn có thể dùng phím tắt:
-  - Nhấn tổ hợp phím `Ctrl+Q` để mở thanh tìm kiếm.
-  - Gõ `Package Manager Console` và chọn kết quả tương ứng.
-
-## 3. Chạy câu lệnh `Update-Database`
-
-- Trong **Package Manager Console**, gõ lệnh sau và nhấn `Enter`:
-  ```powershell
-  Update-Database
-
-## 4. Cập nhật chuỗi kết nối cơ sở dữ liệu
+## 2. Cập nhật chuỗi kết nối cơ sở dữ liệu
 
 - Trước khi chạy lệnh `Update-Database`, bạn cần đảm bảo rằng chuỗi kết nối cơ sở dữ liệu trong file `appsettings.json` đã được cấu hình đúng.
 
@@ -40,3 +22,21 @@
       "DefaultConnection": "Server=your_server_name;Database=your_database_name;User Id=your_username;Password=your_password;"
     }
   }
+
+## 3. Mở Package Manager Console
+
+- Để mở **Package Manager Console**, bạn thực hiện các bước sau:
+  1. Trong Visual Studio, chọn `Tools` trên thanh công cụ.
+  2. Chọn `NuGet Package Manager`.
+  3. Chọn `Package Manager Console`.
+
+  Hoặc bạn có thể dùng phím tắt:
+  - Nhấn tổ hợp phím `Ctrl+Q` để mở thanh tìm kiếm.
+  - Gõ `Package Manager Console` và chọn kết quả tương ứng.
+
+## 4. Chạy câu lệnh `Update-Database`
+
+- Trong **Package Manager Console**, gõ lệnh sau và nhấn `Enter`:
+  ```powershell
+  Update-Database
+
