@@ -1,5 +1,7 @@
 ﻿using Azure.Core;
 using BusinessObject.Model;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Win32;
@@ -13,7 +15,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace BusinessObject.Context
 {
-    public class ConnectDB : DbContext
+    public class ConnectDB : IdentityDbContext<Account>
     {
         public ConnectDB() { }
         public ConnectDB(DbContextOptions<ConnectDB> options) : base(options) { }
@@ -24,7 +26,6 @@ namespace BusinessObject.Context
             IConfigurationRoot configuration = builder.Build();
             optionsBuilder.UseSqlServer(configuration.GetConnectionString("Capstone"));
         }
-        public virtual DbSet<Role> Roles { get; set; }
         public virtual DbSet<Account> Accounts { get; set; }
         public virtual DbSet<AccountDetail> AccountDetails { get; set; }
         public virtual DbSet<Bet> Bets { get; set; }
@@ -39,6 +40,9 @@ namespace BusinessObject.Context
         public virtual DbSet<AuctioneerDetail> AuctioneerDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<IdentityUserLogin<string>>()
+                .HasKey(l => new { l.LoginProvider, l.ProviderKey, l.UserId });
             modelBuilder.Entity<Feedback>()
                 .HasOne(f => f.RegistAuctioneers)
                 .WithOne(ra => ra.Feedbacks)
@@ -72,6 +76,11 @@ namespace BusinessObject.Context
                 .WithMany(r => r.ManagedAuctioneers)
                 .HasForeignKey(p => p.Manager)
                 .OnDelete(DeleteBehavior.NoAction);
+            var adminRoleId = Guid.NewGuid().ToString();
+            modelBuilder.Entity<IdentityRole>().HasData(
+              new IdentityRole { Id = adminRoleId, Name = "admin", NormalizedName = "ADMIN" },
+              new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "user", NormalizedName = "USER" }
+              );
         }
 
 

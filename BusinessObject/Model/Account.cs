@@ -7,17 +7,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace BusinessObject.Model
 {
     [Table("Account")]
-    public class Account : IdentityUser<int>  // Sử dụng IdentityUser<int> nếu bạn muốn AccountId là kiểu int
+    public class Account : IdentityUser // Sử dụng IdentityUser<int> nếu bạn muốn AccountId là kiểu int
     {
         // IdentityUser đã có sẵn UserName, Email, và các thuộc tính khác
         // Không cần khai báo lại UserName và Email ở đây
 
         [Required]
         public int Warning { get; set; }
-
-        [ForeignKey("Role")]
-        public int RoleId { get; set; }
-        public virtual Role Role { get; set; }  // Sửa thành Role thay vì Roles vì tên Roles không phù hợp
 
         public bool? Status { get; set; }
 

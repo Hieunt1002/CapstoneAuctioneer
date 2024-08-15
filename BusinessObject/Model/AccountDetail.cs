@@ -7,7 +7,7 @@ namespace BusinessObject.Model
     public class AccountDetail
     {
         [Key, ForeignKey("Account")]
-        public int AccountID { get; set; }
+        public string AccountID { get; set; }
 
         public virtual Account Account { get; set; }  
 

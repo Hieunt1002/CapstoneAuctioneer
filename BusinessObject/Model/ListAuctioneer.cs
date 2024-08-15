@@ -15,9 +15,9 @@ namespace BusinessObject.Model
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ListAuctioneerID { get; set; }
         [ForeignKey("Account")]
-        public int? Creator { get; set; }
+        public string? Creator { get; set; }
         [ForeignKey("Account")]
-        public int? Manager { get; set; }
+        public string? Manager { get; set; }
         public string Image { get; set; }
         public string NameAuctioneer { get; set; }
         public string Description { get; set; }

@@ -18,7 +18,7 @@ namespace BusinessObject.Model
         public virtual RegistAuctioneer RegistAuctioneers { get; set; }
 
         [ForeignKey("Account")]
-        public int AccountID { get; set; }
+        public string AccountID { get; set; }
 
         public string Title { get; set; }
         public string Description { get; set; }
