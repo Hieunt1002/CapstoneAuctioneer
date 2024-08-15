@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BusinessObject.Model
 {
@@ -12,15 +8,34 @@ namespace BusinessObject.Model
     {
         [Key, ForeignKey("Account")]
         public int AccountID { get; set; }
-        public virtual Account Accounts { set; get; }
-        public string Avatar { get; set; }
-        public string FullName { get; set; }
-        public string Phone { get; set; }
-        public string FrontCCCD { get; set; }
-        public string BacksideCCCD { get; set; }
-        public string City { get; set; }
-        public string ward { get; set; }
-        public string district { get; set; }
-        public string Address { get; set; }
+
+        public virtual Account Account { get; set; }  
+
+        [StringLength(250)]
+        public string? Avatar { get; set; }
+
+        [StringLength(100)]
+        public string? FullName { get; set; }
+
+        [StringLength(15)]
+        public string? Phone { get; set; }
+
+        [StringLength(50)]
+        public string? FrontCCCD { get; set; }
+
+        [StringLength(50)]
+        public string? BacksideCCCD { get; set; }
+
+        [StringLength(100)]
+        public string? City { get; set; }
+
+        [StringLength(100)]
+        public string? Ward { get; set; }  
+
+        [StringLength(100)]
+        public string? District { get; set; } 
+
+        [StringLength(250)]
+        public string? Address { get; set; }
     }
 }

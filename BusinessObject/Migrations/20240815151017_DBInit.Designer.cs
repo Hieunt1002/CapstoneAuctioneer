@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BusinessObject.Migrations
 {
     [DbContext(typeof(ConnectDB))]
-    [Migration("20240813170557_DBInit")]
+    [Migration("20240815151017_DBInit")]
     partial class DBInit
     {
         /// <inheritdoc />
@@ -27,37 +27,64 @@ namespace BusinessObject.Migrations
 
             modelBuilder.Entity("BusinessObject.Model.Account", b =>
                 {
-                    b.Property<int>("AccountID")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AccountID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
                     b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Warning")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("status")
-                        .HasColumnType("bit");
-
-                    b.HasKey("AccountID");
+                    b.HasKey("Id");
 
                     b.HasIndex("RoleId");
 
@@ -70,40 +97,40 @@ namespace BusinessObject.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Avatar")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("BacksideCCCD")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("District")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("FrontCCCD")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
 
-                    b.Property<string>("district")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ward")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Ward")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("AccountID");
 
@@ -287,7 +314,7 @@ namespace BusinessObject.Migrations
                     b.ToTable("ListAuctioneer");
                 });
 
-            modelBuilder.Entity("BusinessObject.Model.Notication", b =>
+            modelBuilder.Entity("BusinessObject.Model.Notification", b =>
                 {
                     b.Property<int>("NoticationID")
                         .ValueGeneratedOnAdd()
@@ -410,24 +437,24 @@ namespace BusinessObject.Migrations
 
             modelBuilder.Entity("BusinessObject.Model.Account", b =>
                 {
-                    b.HasOne("BusinessObject.Model.Role", "Roles")
+                    b.HasOne("BusinessObject.Model.Role", "Role")
                         .WithMany("Accounts")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Roles");
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("BusinessObject.Model.AccountDetail", b =>
                 {
-                    b.HasOne("BusinessObject.Model.Account", "Accounts")
-                        .WithOne("AccountDetails")
+                    b.HasOne("BusinessObject.Model.Account", "Account")
+                        .WithOne("AccountDetail")
                         .HasForeignKey("BusinessObject.Model.AccountDetail", "AccountID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Accounts");
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("BusinessObject.Model.AuctioneerDetail", b =>
@@ -507,10 +534,10 @@ namespace BusinessObject.Migrations
                     b.Navigation("ManagerAccount");
                 });
 
-            modelBuilder.Entity("BusinessObject.Model.Notication", b =>
+            modelBuilder.Entity("BusinessObject.Model.Notification", b =>
                 {
                     b.HasOne("BusinessObject.Model.Account", "Accounts")
-                        .WithMany("Notications")
+                        .WithMany("Notifications")
                         .HasForeignKey("AccountID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -561,7 +588,7 @@ namespace BusinessObject.Migrations
 
             modelBuilder.Entity("BusinessObject.Model.Account", b =>
                 {
-                    b.Navigation("AccountDetails")
+                    b.Navigation("AccountDetail")
                         .IsRequired();
 
                     b.Navigation("CreatedAuctioneers");
@@ -570,7 +597,7 @@ namespace BusinessObject.Migrations
 
                     b.Navigation("ManagedAuctioneers");
 
-                    b.Navigation("Notications");
+                    b.Navigation("Notifications");
 
                     b.Navigation("RegistAuctioneers");
                 });

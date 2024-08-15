@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BusinessObject.Model
 {
-    public class Notication
+    public class Notification
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

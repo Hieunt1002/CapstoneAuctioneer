@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -40,18 +41,29 @@ namespace BusinessObject.Migrations
                 name: "Account",
                 columns: table => new
                 {
-                    AccountID = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     Warning = table.Column<int>(type: "int", nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false),
-                    status = table.Column<bool>(type: "bit", nullable: true)
+                    Status = table.Column<bool>(type: "bit", nullable: true),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Account", x => x.AccountID);
+                    table.PrimaryKey("PK_Account", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Account_Role_RoleId",
                         column: x => x.RoleId,
@@ -65,15 +77,15 @@ namespace BusinessObject.Migrations
                 columns: table => new
                 {
                     AccountID = table.Column<int>(type: "int", nullable: false),
-                    Avatar = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FrontCCCD = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    BacksideCCCD = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    City = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ward = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    district = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Avatar = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
+                    FullName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Phone = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: true),
+                    FrontCCCD = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    BacksideCCCD = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    City = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Ward = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    District = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Address = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -82,7 +94,7 @@ namespace BusinessObject.Migrations
                         name: "FK_AccountDetails_Account_AccountID",
                         column: x => x.AccountID,
                         principalTable: "Account",
-                        principalColumn: "AccountID",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -107,12 +119,12 @@ namespace BusinessObject.Migrations
                         name: "FK_ListAuctioneer_Account_Creator",
                         column: x => x.Creator,
                         principalTable: "Account",
-                        principalColumn: "AccountID");
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ListAuctioneer_Account_Manager",
                         column: x => x.Manager,
                         principalTable: "Account",
-                        principalColumn: "AccountID");
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -132,7 +144,7 @@ namespace BusinessObject.Migrations
                         name: "FK_Notications_Account_AccountID",
                         column: x => x.AccountID,
                         principalTable: "Account",
-                        principalColumn: "AccountID",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -186,7 +198,7 @@ namespace BusinessObject.Migrations
                         name: "FK_RegistAuctioneer_Account_AccountID",
                         column: x => x.AccountID,
                         principalTable: "Account",
-                        principalColumn: "AccountID",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_RegistAuctioneer_ListAuctioneer_ListAuctioneerID",
@@ -253,7 +265,7 @@ namespace BusinessObject.Migrations
                         name: "FK_Feedback_Account_AccountID",
                         column: x => x.AccountID,
                         principalTable: "Account",
-                        principalColumn: "AccountID",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Feedback_RegistAuctioneer_RAID",

@@ -32,7 +32,7 @@ namespace BusinessObject.Context
         public virtual DbSet<Feedback> Feedbacks { get; set; }
         public virtual DbSet<FileAttachments> FileAttachments { get; set; }
         public virtual DbSet<ListAuctioneer> ListAuctioneers { get; set; }
-        public virtual DbSet<Notication> Notications { get; set; }
+        public virtual DbSet<Notification> Notications { get; set; }
         public virtual DbSet<Payment> Payments { get; set; }
         public virtual DbSet<RegistAuctioneer> RegistAuctioneers { get; set; }
         public virtual DbSet<TImage> TImages { get; set; }
