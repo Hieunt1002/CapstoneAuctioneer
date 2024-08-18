@@ -41,5 +41,30 @@ namespace DataAccess.Service
             var changepassword = await _accountRepository.ProfileUser(username);
             return changepassword;
         }
+        public async Task<ResponseDTO> ForgotPassword(string username)
+        {
+            var forgotpassword = await _accountRepository.ForgotPassword(username);
+            return forgotpassword;
+        }
+        public async Task<ResponseDTO> ResetPasswordAsync(ResetPasswordDTO resetPasswordDTO)
+        {
+            var resetpasword = await _accountRepository.ResetPasswordAsync(resetPasswordDTO);
+            return resetpasword;
+        }
+        public async Task<ResponseDTO> UpdateUserProfile(string userid, UProfileDTO uProfileDTO)
+        {
+            var updateProfile = await _accountRepository.UpdateUserProfile(userid,uProfileDTO);
+            return updateProfile;
+        }
+        public async Task<ResponseDTO> MakeAdminsync(AddAccountDTO updatePermissionDTO)
+        {
+            var register = await _accountRepository.MakeAdminsync(updatePermissionDTO);
+            return register;
+        }
+        public async Task<ResponseDTO> ListAccount()
+        {
+            var listAccount = await _accountRepository.ListAccount();
+            return listAccount;
+        }
     }
 }

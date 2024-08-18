@@ -11,19 +11,14 @@ namespace BusinessObject.Model
 
         public virtual Account Account { get; set; }  
 
-        [StringLength(250)]
         public string? Avatar { get; set; }
 
         [StringLength(100)]
         public string? FullName { get; set; }
 
-        [StringLength(15)]
+        [StringLength(10)]
         public string? Phone { get; set; }
-
-        [StringLength(50)]
         public string? FrontCCCD { get; set; }
-
-        [StringLength(50)]
         public string? BacksideCCCD { get; set; }
 
         [StringLength(100)]

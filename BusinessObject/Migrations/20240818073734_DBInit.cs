@@ -93,11 +93,11 @@ namespace BusinessObject.Migrations
                 columns: table => new
                 {
                     AccountID = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Avatar = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
+                    Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FullName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    Phone = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: true),
-                    FrontCCCD = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    BacksideCCCD = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Phone = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    FrontCCCD = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BacksideCCCD = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     City = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     Ward = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     District = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
@@ -420,8 +420,8 @@ namespace BusinessObject.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "b83f5b15-893b-44c2-b241-42a65903dad6", null, "admin", "ADMIN" },
-                    { "fd67cf6f-eebb-4595-b6cf-b24a35366d6c", null, "user", "USER" }
+                    { "a2501138-4d7f-4d4b-97db-12d03ffb8983", null, "user", "USER" },
+                    { "d9e61529-d917-44a7-93bf-985c29a0283e", null, "admin", "ADMIN" }
                 });
 
             migrationBuilder.CreateIndex(

@@ -13,7 +13,12 @@ namespace DataAccess.IRepository
     {
         Task<ResponseDTO> LoginAsync(Login loginDTO);
         Task<ResponseDTO> MakeUSERAsync(AddAccountDTO updatePermissionDTO);
+        Task<ResponseDTO> MakeAdminsync(AddAccountDTO updatePermissionDTO);
         Task<ResponseDTO> ChangePassWord(ChangepassDTO changepassDTO);
         Task<ResponseDTO> ProfileUser(string username);
+        Task<ResponseDTO> ForgotPassword(string username);
+        Task<ResponseDTO> ResetPasswordAsync(ResetPasswordDTO resetPasswordDTO);
+        Task<ResponseDTO> UpdateUserProfile(string userID, UProfileDTO uProfileDTO);
+        Task<ResponseDTO> ListAccount();
     }
 }

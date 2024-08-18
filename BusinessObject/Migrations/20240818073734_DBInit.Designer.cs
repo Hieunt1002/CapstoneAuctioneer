@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BusinessObject.Migrations
 {
     [DbContext(typeof(ConnectDB))]
-    [Migration("20240815170038_DBInit")]
+    [Migration("20240818073734_DBInit")]
     partial class DBInit
     {
         /// <inheritdoc />
@@ -106,12 +106,10 @@ namespace BusinessObject.Migrations
                         .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Avatar")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BacksideCCCD")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("City")
                         .HasMaxLength(100)
@@ -122,16 +120,15 @@ namespace BusinessObject.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("FrontCCCD")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FullName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Phone")
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("Ward")
                         .HasMaxLength(100)
@@ -454,13 +451,13 @@ namespace BusinessObject.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "b83f5b15-893b-44c2-b241-42a65903dad6",
+                            Id = "d9e61529-d917-44a7-93bf-985c29a0283e",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "fd67cf6f-eebb-4595-b6cf-b24a35366d6c",
+                            Id = "a2501138-4d7f-4d4b-97db-12d03ffb8983",
                             Name = "user",
                             NormalizedName = "USER"
                         });

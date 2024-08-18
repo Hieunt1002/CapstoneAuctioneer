@@ -1,30 +1,62 @@
-using BusinessObject.Context;
+﻿using BusinessObject.Context;
 using BusinessObject.Model;
 using DataAccess.IRepository;
 using DataAccess.Repository;
 using DataAccess.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.OData.Routing;
+using Microsoft.AspNetCore.OData;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.OpenApi.Models;
+using Microsoft.OData.Edm;
+using Microsoft.OData.ModelBuilder;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddCors();
 builder.Services.AddSession();
 builder.Services.AddControllers();
 
-// Add Swagger/OpenAPI services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-// Add DbContext and Identity services
+builder.Services.AddSwaggerGen(option =>
+{
+    option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    option.AddSecurityRequirement(new OpenApiSecurityRequirement
+                    {
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                                }
+                            },
+                            new string[] { }
+                        }
+                    });
+});
+builder.Services.AddControllers().AddOData(option => option.Select().Filter().Count().OrderBy().Expand()
+.SetMaxTop(100).AddRouteComponents("odata", GetEdmModel()));
 builder.Services.AddDbContext<ConnectDB>();
 builder.Services.AddIdentity<Account, IdentityRole>()
     .AddEntityFrameworkStores<ConnectDB>()
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddSingleton<IUploadRepository>(sp => new UploadRepository(builder.Environment.ContentRootPath));
 builder.Services
     .AddAuthentication(options =>
     {
@@ -52,33 +84,72 @@ builder.Services
             ValidateAudience = true,
             ValidIssuer = validIssuer,
             ValidAudience = validAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+            ClockSkew = TimeSpan.Zero // Loại bỏ thời gian chênh lệch để tránh các vấn đề liên quan đến thời gian sống của token
         };
     });
+
+// Cấu hình Authorization với các policy
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ADMIN", policy => policy.RequireRole("admin"));
+    options.AddPolicy("USER", policy => policy.RequireRole("user"));
+});
 
 builder.Services.AddMvc();
 
 var app = builder.Build();
 
-app.UseCors(builder =>
-{
-    builder
-        .WithOrigins("*")
-        .AllowAnyOrigin()
-        .AllowAnyMethod()
-        .AllowAnyHeader();
-});
-
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
 }
-
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("../swagger/v1/swagger.json", "Project v1"));
 app.UseHttpsRedirection();
-app.UseSession();
+app.UseODataBatching();
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader();
+});
 app.UseRouting();
+app.Use(next => context =>
+{
+    var endpoint = context.GetEndpoint();
+    if (endpoint == null)
+    {
+        return next(context);
+    }
+    IEnumerable<string> templates;
+    IODataRoutingMetadata metadata = endpoint.Metadata.GetMetadata<IODataRoutingMetadata>();
+    if (metadata != null)
+    {
+        templates = metadata.Template.GetTemplates();
+    }
+    return next(context);
+});
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+app.UseEndpoints(enpoints =>
+{
+    enpoints.MapControllers();
+});
+
 app.Run();
+static IEdmModel GetEdmModel()
+{
+    ODataConventionModelBuilder builder = new ODataConventionModelBuilder();
+    //builder.EntitySet<artworks>("artworks");
+    //builder.EntitySet<Museums>("Museums");
+    //builder.EntitySet<Users>("Users");
+    //builder.EntitySet<Roles>("Roles");
+
+    //builder.EntityType<artworks>().HasKey(e => e.artword_id);
+    //builder.EntityType<Museums>().HasKey(e => e.museum_id);
+    //builder.EntityType<Users>().HasKey(e => e.user_id);
+    //builder.EntityType<Roles>().HasKey(e => e.role_id);
+    return builder.GetEdmModel();
+}

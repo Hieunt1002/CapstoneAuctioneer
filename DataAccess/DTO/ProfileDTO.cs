@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,8 +9,11 @@ namespace DataAccess.DTO
 {
     public class ProfileDTO
     {
+        public string AccountId { get; set; }
         public string UserName { get; set; }
         public string Avatar { get; set; }
+        public string? FrontCCCD { get; set; }
+        public string? BacksideCCCD { get; set; }
         public string Email { get; set; }
         public string FullName { get; set; }
         public string Phone { get; set; }
