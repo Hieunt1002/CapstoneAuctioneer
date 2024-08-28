@@ -56,6 +56,11 @@ namespace DataAccess.Service
             var updateProfile = await _accountRepository.UpdateUserProfile(userid,uProfileDTO);
             return updateProfile;
         }
+        public async Task<ResponseDTO> AddInformation(string userid, AddInformationDTO uProfileDTO)
+        {
+            var updateProfile = await _accountRepository.AddInformation(userid, uProfileDTO);
+            return updateProfile;
+        }
         public async Task<ResponseDTO> MakeAdminsync(AddAccountDTO updatePermissionDTO)
         {
             var register = await _accountRepository.MakeAdminsync(updatePermissionDTO);
@@ -65,6 +70,16 @@ namespace DataAccess.Service
         {
             var listAccount = await _accountRepository.ListAccount();
             return listAccount;
+        }
+        public async Task<ResponseDTO> LockAccount(string accountID)
+        {
+            var lockaccount = await _accountRepository.LockAccount(accountID);
+            return lockaccount;
+        }
+        public async Task<ResponseDTO> UnLockAccount(string accountID)
+        {
+            var lockaccount = await _accountRepository.UnLockAccount(accountID);
+            return lockaccount;
         }
     }
 }

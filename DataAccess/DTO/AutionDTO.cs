@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessObject.Model
+namespace DataAccess.DTO
 {
-    [Table("AuctioneerDetail")]
-    public class AuctioneerDetail
+    public class AutionDTO
     {
-        [Key, ForeignKey("ListAuctioneer")]
         public int ListAuctioneerID { get; set; }
-        [ForeignKey("Category")]
-        public int? CategoryID { get; set; }
+        public string Image { get; set; }
+        public string NameAuctioneer { get; set; }
+        public string Description { get; set; }
+        public decimal StartingPrice { get; set; }
+        public string StatusAuction { get; set; }
         public string StartDay { get; set; }
         public string StartTime { get; set; }
         public string EndDay { get; set; }
@@ -23,8 +22,9 @@ namespace BusinessObject.Model
         public string TimePerLap { get; set; }
         public decimal? PriceStep { get; set; }
         public string PaymentMethod { get; set; }
-        public virtual ListAuctioneer ListAuctioneers { get; set; }
-        public virtual Category Categorys { get; set; }
-        public virtual ICollection<FileAttachments> FileAttachments { get; set; } = new List<FileAttachments>();
+        public string FileAuctioneer { get; set; }
+        public string SignatureImg { get; set; }
+        public object TImage { get; set; }
+        public string countdowntime { get; set; }
     }
 }

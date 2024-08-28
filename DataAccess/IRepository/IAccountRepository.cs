@@ -20,5 +20,8 @@ namespace DataAccess.IRepository
         Task<ResponseDTO> ResetPasswordAsync(ResetPasswordDTO resetPasswordDTO);
         Task<ResponseDTO> UpdateUserProfile(string userID, UProfileDTO uProfileDTO);
         Task<ResponseDTO> ListAccount();
+        Task<ResponseDTO> LockAccount(string accountID);
+        Task<ResponseDTO> AddInformation(string userID, AddInformationDTO uProfileDTO);
+        Task<ResponseDTO> UnLockAccount(string accountID);
     }
 }

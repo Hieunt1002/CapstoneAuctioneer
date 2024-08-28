@@ -22,45 +22,36 @@ namespace DataAccess.Repository
             }
         }
 
-        public async Task UploadFile(IFormFile file)
+        public async Task<string> SaveFileAsync(IFormFile file, string folder, string userId)
         {
-            if (file == null || file.Length == 0)
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads", folder);
+            if (!Directory.Exists(uploadsFolder))
             {
-                throw new ArgumentException("File không hợp lệ.");
+                Directory.CreateDirectory(uploadsFolder);
             }
 
-            try
-            {
-                // Tạo tên file mới tại thư mục đích
-                string fileName = Path.GetFileName(file.FileName);
-                string destinationFilePath = Path.Combine(destinationFolderPath, fileName);
+            var fileName = $"{userId}_{DateTime.Now:yyyyMMddHHmmss}_{file.FileName}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
 
-                // Lưu file vào thư mục đích
-                using (var stream = new FileStream(destinationFilePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-            }
-            catch (Exception ex)
+            using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                throw new InvalidOperationException("Đã xảy ra lỗi khi lưu file.", ex);
+                await file.CopyToAsync(stream);
             }
+
+            return $"{folder}/{fileName}";
         }
 
-        public Task<Stream> ReadFileAsync(string fileName)
+        public Task<Stream> ReadFileAsync(string filePath)
         {
-            // Giải mã URL nếu cần
-            fileName = Uri.UnescapeDataString(fileName);
+            // Chuyển đổi dấu gạch chéo `/` thành gạch chéo ngược `\` cho hệ thống tệp của Windows
+            var fullPath = Path.Combine(destinationFolderPath, filePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
 
-            // Chuẩn hóa đường dẫn để sử dụng với hệ thống tệp của Windows
-            var filePath = Path.Combine(destinationFolderPath, fileName.Replace("/", Path.DirectorySeparatorChar.ToString()));
-
-            if (!File.Exists(filePath))
+            if (!File.Exists(fullPath))
             {
-                throw new FileNotFoundException("File không tồn tại.", fileName);
+                throw new FileNotFoundException("File không tồn tại.", filePath);
             }
 
-            var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             return Task.FromResult((Stream)stream);
         }
         public string ReadFileAsyncs(string fileName)

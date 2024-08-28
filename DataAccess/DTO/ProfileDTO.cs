@@ -23,5 +23,6 @@ namespace DataAccess.DTO
         public string Address { get; set; }
         public int Warning { get; set; }
         public bool? Status { get; set; }
+        public string Role { get; set; }
     }
 }

@@ -10,7 +10,7 @@ namespace DataAccess.IRepository
 {
     public interface IUploadRepository
     {
-        public Task UploadFile(IFormFile file);
+        public Task<string> SaveFileAsync(IFormFile file, string folder, string userId);
         public Task<Stream> ReadFileAsync(string fileName);
     }
 }

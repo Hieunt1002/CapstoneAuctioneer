@@ -82,7 +82,5 @@ namespace BusinessObject.Context
               new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "user", NormalizedName = "USER" }
               );
         }
-
-
     }
 }

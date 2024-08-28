@@ -12,10 +12,18 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
+using CapstoneAuctioneerAPI;
+using DataAccess;
+using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors();
+builder.Services.AddControllersWithViews()
+    .AddNewtonsoftJson()
+    .AddXmlDataContractSerializerFormatters();
+
 builder.Services.AddSession();
 builder.Services.AddControllers();
 
@@ -55,7 +63,14 @@ builder.Services.AddIdentity<Account, IdentityRole>()
     .AddEntityFrameworkStores<ConnectDB>()
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<AuctionService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<IAuctioneerRepository, AuctioneerRepository>();
+builder.Services.AddScoped<IUserReponsitory, UserReponsitory>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUploadRepository>(sp => new UploadRepository(builder.Environment.ContentRootPath));
 builder.Services
     .AddAuthentication(options =>
@@ -142,14 +157,8 @@ app.Run();
 static IEdmModel GetEdmModel()
 {
     ODataConventionModelBuilder builder = new ODataConventionModelBuilder();
-    //builder.EntitySet<artworks>("artworks");
-    //builder.EntitySet<Museums>("Museums");
-    //builder.EntitySet<Users>("Users");
-    //builder.EntitySet<Roles>("Roles");
+    builder.EntitySet<Account>("Account");
 
-    //builder.EntityType<artworks>().HasKey(e => e.artword_id);
-    //builder.EntityType<Museums>().HasKey(e => e.museum_id);
-    //builder.EntityType<Users>().HasKey(e => e.user_id);
-    //builder.EntityType<Roles>().HasKey(e => e.role_id);
+    builder.EntityType<Account>().HasKey(e => e.Id);
     return builder.GetEdmModel();
 }

@@ -27,6 +27,7 @@ namespace DataAccess.Repository
         private readonly UserManager<Account> _accountManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
+        private readonly IUploadRepository _upload;
         private readonly IUploadRepository _uploadRepository;
 
         public AccountRepository(
@@ -34,6 +35,7 @@ namespace DataAccess.Repository
             UserManager<Account> accountManager,
             RoleManager<IdentityRole> roleManager,
             IUploadRepository uploadRepository,
+            IUploadRepository upload,
             IConfiguration configuration)
         {
             _context = context;
@@ -41,6 +43,7 @@ namespace DataAccess.Repository
             _roleManager = roleManager;
             _configuration = configuration;
             _uploadRepository = uploadRepository;
+            _upload = upload;
         }
 
         public async Task<ResponseDTO> LoginAsync(Login loginDTO)
@@ -59,6 +62,10 @@ namespace DataAccess.Repository
             if (account == null || !await _accountManager.CheckPasswordAsync(account, loginDTO.password))
             {
                 return new ResponseDTO() { IsSucceed = false, Message = "Invalid credentials" };
+            }
+            if (account.Status == true)
+            {
+                return new ResponseDTO() { IsSucceed = false, Message = "Account had lock" };
             }
 
             var userRoles = await _accountManager.GetRolesAsync(account);
@@ -96,11 +103,13 @@ namespace DataAccess.Repository
 
         public async Task<ResponseDTO> MakeUSERAsync(AddAccountDTO account)
         {
+            var isExistEmail = await _accountManager.FindByEmailAsync(account.Email);
             var isExistUser = await _accountManager.FindByNameAsync(account.UserName);
 
-            if (isExistUser != null)
+
+            if (isExistUser != null || isExistEmail != null)
             {
-                return new ResponseDTO() { IsSucceed = false, Message = "UserName already exists" };
+                return new ResponseDTO() { IsSucceed = false, Message = "You already have an account" };
             }
 
             var createAccount = new Account
@@ -109,6 +118,7 @@ namespace DataAccess.Repository
                 Email = account.Email,
                 Warning = 0,
                 SecurityStamp = Guid.NewGuid().ToString(),
+                Status = false,
             };
 
             var createUserResult = await _accountManager.CreateAsync(createAccount, account.Password);
@@ -122,12 +132,6 @@ namespace DataAccess.Repository
             var createAccountDetail = new AccountDetail
             {
                 AccountID = createAccount.Id,
-                FullName = account.FullName,
-                Phone = account.Phone,
-                City = account.City,
-                Ward = account.ward,
-                District = account.district,
-                Address = account.Address
             };
 
             var createAccountDetailResult = await AccountDAO.Instance.AddAccountDetailAsync(createAccountDetail);
@@ -176,19 +180,14 @@ namespace DataAccess.Repository
             ProfileDTO profileDTO = null;
             Account account = null;
             AccountDetail accountDetail = null;
-            if (username.Contains('@'))
-            {
-                account = await _accountManager.FindByEmailAsync(username);
-            }
-            else
-            {
-                account = await _accountManager.FindByNameAsync(username);
-            }
+            account = await _accountManager.FindByIdAsync(username);
+            var roles = await _accountManager.GetRolesAsync(account);
+            var role = roles.FirstOrDefault(); // Get the first role
             if (account == null)
             {
                 return new ResponseDTO { IsSucceed = false, Message = "Account not found" };
             }
-            
+
             accountDetail = await AccountDAO.Instance.ProfileDAO(account.Id);
             if (accountDetail == null)
             {
@@ -198,16 +197,18 @@ namespace DataAccess.Repository
             {
                 AccountId = account.Id,
                 UserName = account.UserName,
-                Avatar = accountDetail.Avatar,
-                FrontCCCD= accountDetail.FrontCCCD,
-                BacksideCCCD= accountDetail.BacksideCCCD,
+                Avatar = $"http://capstoneauctioneer.runasp.net/api/Upload/read?filePath={accountDetail.Avatar}",
+                FrontCCCD = $"http://capstoneauctioneer.runasp.net/api/Upload/read?filePath={accountDetail.FrontCCCD}",
+                BacksideCCCD = $"http://capstoneauctioneer.runasp.net/api/Upload/read?filePath={accountDetail.BacksideCCCD}",
                 Email = account.Email,
                 FullName = accountDetail.FullName,
                 Phone = accountDetail.Phone,
                 City = accountDetail.City,
                 Ward = accountDetail.Ward,
                 District = accountDetail.District,
-                Address = accountDetail.Address
+                Address = accountDetail.Address,
+                Status = account.Status,
+                Role = role
             };
             return new ResponseDTO { Result = profileDTO, IsSucceed = true, Message = "Successfully" };
         }
@@ -270,8 +271,6 @@ namespace DataAccess.Repository
             return new ResponseDTO { IsSucceed = true, Message = "Email sent successfully." };
         }
 
-
-
         public async Task<ResponseDTO> ResetPasswordAsync(ResetPasswordDTO resetPasswordDTO)
         {
             // Tìm kiếm tài khoản theo email hoặc tên người dùng
@@ -303,7 +302,39 @@ namespace DataAccess.Repository
 
             return new ResponseDTO { IsSucceed = true, Message = "Password reset successfully" };
         }
+        public async Task<ResponseDTO> AddInformation(string userID, AddInformationDTO uProfileDTO)
+        {
+            var account = await AccountDAO.Instance.ProfileDAO(userID);
+            if (account == null)
+            {
+                return new ResponseDTO { IsSucceed = false, Message = "Account not found" };
+            }
 
+            var accountDetail = new AccountDetail
+            {
+                AccountID = userID,
+                FullName = uProfileDTO.FullName,
+                Phone = uProfileDTO.Phone,
+                City = uProfileDTO.City,
+                Ward = uProfileDTO.Ward,
+                District = uProfileDTO.District,
+                Address = uProfileDTO.Address,
+                Avatar = uProfileDTO.Avatar != null ? await _upload.SaveFileAsync(uProfileDTO.Avatar, "avatars", userID) : account.Avatar,
+                FrontCCCD = uProfileDTO.FrontCCCD != null ? await _upload.SaveFileAsync(uProfileDTO.FrontCCCD, "cccd/front", userID) : account.FrontCCCD,
+                BacksideCCCD = uProfileDTO.BacksideCCCD != null ? await _upload.SaveFileAsync(uProfileDTO.BacksideCCCD, "cccd/back", userID) : account.BacksideCCCD
+            };
+
+            try
+            {
+                await AccountDAO.Instance.UpdateAccountDetail(accountDetail);
+                return new ResponseDTO { IsSucceed = true, Message = "Profile updated successfully" };
+            }
+            catch (Exception ex)
+            {
+                // Xử lý lỗi chi tiết hoặc ghi log
+                return new ResponseDTO { IsSucceed = false, Message = "Profile update failed: " + ex.Message };
+            }
+        }
         public async Task<ResponseDTO> UpdateUserProfile(string userID, UProfileDTO uProfileDTO)
         {
             var account = await AccountDAO.Instance.ProfileDAO(userID);
@@ -321,9 +352,7 @@ namespace DataAccess.Repository
                 Ward = uProfileDTO.Ward,
                 District = uProfileDTO.District,
                 Address = uProfileDTO.Address,
-                Avatar = uProfileDTO.Avatar != null ? await SaveFileAsync(uProfileDTO.Avatar, "avatars", userID) : account.Avatar,
-                FrontCCCD = uProfileDTO.FrontCCCD != null ? await SaveFileAsync(uProfileDTO.FrontCCCD, "cccd/front", userID) : account.FrontCCCD,
-                BacksideCCCD = uProfileDTO.BacksideCCCD != null ? await SaveFileAsync(uProfileDTO.BacksideCCCD, "cccd/back", userID) : account.BacksideCCCD
+                Avatar = uProfileDTO.Avatar != null ? await _upload.SaveFileAsync(uProfileDTO.Avatar, "avatars", userID) : account.Avatar
             };
 
             try
@@ -338,32 +367,17 @@ namespace DataAccess.Repository
             }
         }
 
-        private async Task<string> SaveFileAsync(IFormFile file, string folder, string userId)
-        {
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads", folder);
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
 
-            var fileName = $"{userId}_{DateTime.Now:yyyyMMddHHmmss}_{file.FileName}";
-            var filePath = Path.Combine(uploadsFolder, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            return $"{folder}/{fileName}";
-        }
 
         public async Task<ResponseDTO> MakeAdminsync(AddAccountDTO updatePermissionDTO)
         {
+            var isExistEmail = await _accountManager.FindByEmailAsync(updatePermissionDTO.Email);
             var isExistUser = await _accountManager.FindByNameAsync(updatePermissionDTO.UserName);
 
-            if (isExistUser != null)
+
+            if (isExistUser != null || isExistEmail != null)
             {
-                return new ResponseDTO() { IsSucceed = false, Message = "UserName already exists" };
+                return new ResponseDTO() { IsSucceed = false, Message = "You already have an account" };
             }
 
             var createAccount = new Account
@@ -372,6 +386,7 @@ namespace DataAccess.Repository
                 Email = updatePermissionDTO.Email,
                 Warning = 0,
                 SecurityStamp = Guid.NewGuid().ToString(),
+                Status = false
             };
 
             var createUserResult = await _accountManager.CreateAsync(createAccount, updatePermissionDTO.Password);
@@ -384,13 +399,7 @@ namespace DataAccess.Repository
 
             var createAccountDetail = new AccountDetail
             {
-                AccountID = createAccount.Id,
-                FullName = updatePermissionDTO.FullName,
-                Phone = updatePermissionDTO.Phone,
-                City = updatePermissionDTO.City,
-                Ward = updatePermissionDTO.ward,
-                District = updatePermissionDTO.district,
-                Address = updatePermissionDTO.Address
+                AccountID = createAccount.Id
             };
 
             var createAccountDetailResult = await AccountDAO.Instance.AddAccountDetailAsync(createAccountDetail);
@@ -408,24 +417,13 @@ namespace DataAccess.Repository
         {
             try
             {
-                var accounts = await (from acc in _accountManager.Users
-                                      join accDetail in _context.AccountDetails on acc.Id equals accDetail.AccountID
-                                      select new ProfileDTO
+                // Lấy danh sách tài khoản và chi tiết tài khoản
+                var accounts = await (from acc in _accountManager.Users.AsNoTracking()
+                                      join accDetail in _context.AccountDetails.AsNoTracking() on acc.Id equals accDetail.AccountID
+                                      select new
                                       {
-                                          AccountId = acc.Id,
-                                          UserName = acc.UserName,
-                                          Email = acc.Email,
-                                          FullName = accDetail.FullName,
-                                          Phone = accDetail.Phone,
-                                          City = accDetail.City,
-                                          Ward = accDetail.Ward,
-                                          District = accDetail.District,
-                                          Address = accDetail.Address,
-                                          Avatar = accDetail.Avatar,
-                                          FrontCCCD = accDetail.FrontCCCD,
-                                          BacksideCCCD = accDetail.BacksideCCCD,
-                                          Warning = acc.Warning,
-                                          Status = acc.Status
+                                          acc,
+                                          accDetail
                                       }).ToListAsync();
 
                 if (accounts == null || !accounts.Any())
@@ -433,7 +431,35 @@ namespace DataAccess.Repository
                     return new ResponseDTO { IsSucceed = false, Message = "No accounts found" };
                 }
 
-                return new ResponseDTO { IsSucceed = true, Result = accounts, Message = "Successfully retrieved accounts" };
+                var accountList = new List<ProfileDTO>();
+
+                foreach (var item in accounts)
+                {
+                    // Lấy danh sách vai trò của từng tài khoản
+                    var roles = await _accountManager.GetRolesAsync(item.acc);
+
+                    // Thêm thông tin tài khoản và vai trò vào danh sách kết quả
+                    accountList.Add(new ProfileDTO
+                    {
+                        AccountId = item.acc.Id,
+                        UserName = item.acc.UserName,
+                        Email = item.acc.Email,
+                        FullName = item.accDetail.FullName,
+                        Phone = item.accDetail.Phone,
+                        City = item.accDetail.City,
+                        Ward = item.accDetail.Ward,
+                        District = item.accDetail.District,
+                        Address = item.accDetail.Address,
+                        Avatar = item.accDetail.Avatar,
+                        FrontCCCD = item.accDetail.FrontCCCD,
+                        BacksideCCCD = item.accDetail.BacksideCCCD,
+                        Warning = item.acc.Warning,
+                        Status = item.acc.Status,
+                        Role = string.Join(", ", roles) // Nối các vai trò thành chuỗi
+                    });
+                }
+
+                return new ResponseDTO { IsSucceed = true, Result = accountList, Message = "Successfully retrieved accounts" };
             }
             catch (Exception ex)
             {
@@ -442,5 +468,62 @@ namespace DataAccess.Repository
             }
         }
 
+
+        public async Task<ResponseDTO> LockAccount(string accountID)
+        {
+            // Tìm tài khoản theo ID
+            var account = await _accountManager.FindByIdAsync(accountID);
+            if (account == null)
+            {
+                return new ResponseDTO { IsSucceed = false, Message = "Account not found" };
+            }
+
+            // Cập nhật trạng thái khóa của tài khoản
+            account.Status = true; // Giả sử 'true' nghĩa là tài khoản bị khóa, nếu ngược lại, thay đổi cho phù hợp
+
+            try
+            {
+                // Cập nhật tài khoản với trạng thái mới
+                var result = await _accountManager.UpdateAsync(account);
+                if (!result.Succeeded) // .Succeeded được sử dụng để kiểm tra kết quả của việc cập nhật
+                {
+                    return new ResponseDTO { IsSucceed = false, Message = "Failed to update account status." };
+                }
+                return new ResponseDTO { IsSucceed = true, Message = "Account locked successfully." };
+            }
+            catch (Exception ex)
+            {
+                // Xử lý lỗi chi tiết hoặc ghi log
+                return new ResponseDTO { IsSucceed = false, Message = "Account lock failed: " + ex.Message };
+            }
+        }
+        public async Task<ResponseDTO> UnLockAccount(string accountID)
+        {
+            // Tìm tài khoản theo ID
+            var account = await _accountManager.FindByIdAsync(accountID);
+            if (account == null)
+            {
+                return new ResponseDTO { IsSucceed = false, Message = "Account not found" };
+            }
+
+            // Cập nhật trạng thái khóa của tài khoản
+            account.Status = false; // Giả sử 'true' nghĩa là tài khoản bị khóa, nếu ngược lại, thay đổi cho phù hợp
+
+            try
+            {
+                // Cập nhật tài khoản với trạng thái mới
+                var result = await _accountManager.UpdateAsync(account);
+                if (!result.Succeeded) // .Succeeded được sử dụng để kiểm tra kết quả của việc cập nhật
+                {
+                    return new ResponseDTO { IsSucceed = false, Message = "Failed to update account status." };
+                }
+                return new ResponseDTO { IsSucceed = true, Message = "Account locked successfully." };
+            }
+            catch (Exception ex)
+            {
+                // Xử lý lỗi chi tiết hoặc ghi log
+                return new ResponseDTO { IsSucceed = false, Message = "Account lock failed: " + ex.Message };
+            }
+        }
     }
 }

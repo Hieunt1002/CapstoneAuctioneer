@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CapstoneAuctioneerAPI.Controller
 {
-    [Route("api/[controller]")]
+    [Route("api")]
     [ApiController]
     public class UploadController : ControllerBase
     {
@@ -17,43 +17,17 @@ namespace CapstoneAuctioneerAPI.Controller
             _uploadRepository = uploadRepository;
         }
 
-        [HttpPost("upload")]
-        public async Task<IActionResult> UploadFile(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("File không hợp lệ.");
-            }
-
-            try
-            {
-                await _uploadRepository.UploadFile(file);
-                return Ok(new { Message = "File đã được tải lên thành công." });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Đã xảy ra lỗi không xác định.");
-            }
-        }
-
-        [HttpGet("read/{fileName}")]
-        public async Task<IActionResult> ReadFile(string fileName)
+        [HttpGet("read")]
+        public async Task<IActionResult> ReadFile(string filePath)
         {
             try
             {
-                var fileStream = await _uploadRepository.ReadFileAsync(fileName);
+                // Đọc tệp từ đường dẫn
+                var fileStream = await _uploadRepository.ReadFileAsync(filePath);
 
                 // Xác định loại MIME của tệp dựa trên phần mở rộng
                 var contentType = "application/octet-stream";
-                var fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
+                var fileExtension = Path.GetExtension(filePath).ToLowerInvariant();
 
                 contentType = fileExtension switch
                 {
@@ -64,7 +38,7 @@ namespace CapstoneAuctioneerAPI.Controller
                     _ => contentType
                 };
 
-                return File(fileStream, contentType, fileName);
+                return File(fileStream, contentType, filePath);
             }
             catch (FileNotFoundException ex)
             {
@@ -75,5 +49,6 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(StatusCodes.Status500InternalServerError, "Đã xảy ra lỗi khi đọc file.");
             }
         }
+
     }
 }

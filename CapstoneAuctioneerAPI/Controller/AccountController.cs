@@ -10,12 +10,15 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Azure;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.AspNetCore.OData.Query;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace CapstoneAuctioneerAPI.Controller
 {
     [Route("api")]
     [ApiController]
-    public class AccountController : ControllerBase
+    public class AccountController : ODataController
     {
         private readonly AccountService _accountService;
 
@@ -103,11 +106,12 @@ namespace CapstoneAuctioneerAPI.Controller
         [HttpGet]
         [Authorize]
         [Route("UserOrAdmin/profile")]
-        public async Task<ActionResult> ProfileUser(string username)
+        public async Task<ActionResult> ProfileUser()
         {
             try
             {
-                var result = await _accountService.ProfileUserAsync(username);
+                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Get user ID from claims
+                var result = await _accountService.ProfileUserAsync(userId);
                 if (result.IsSucceed)
                 {
                     return Ok(result);
@@ -155,9 +159,9 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new { Message = ex.Message });
             }
         }
-        [HttpPut("UserOrAdmin/update-profile")]
+        [HttpPut("UserOrAdmin/addInformation")]
         [Authorize]
-        public async Task<IActionResult> UpdateProfile(
+        public async Task<IActionResult> AddInformation(
             IFormFile? Avatar,
             string? FullName,
             string? Phone,
@@ -169,7 +173,7 @@ namespace CapstoneAuctioneerAPI.Controller
             string? Address
             )
         {
-            var uProfileDTO = new UProfileDTO()
+            var uProfileDTO = new AddInformationDTO()
             {
                 Avatar = Avatar,
                 FullName = FullName,
@@ -182,19 +186,51 @@ namespace CapstoneAuctioneerAPI.Controller
                 Address = Address
             };
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Get user ID from claims
+            var response = await _accountService.AddInformation(userId, uProfileDTO);
+
+            if (!response.IsSucceed)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+        [HttpPut("UserOrAdmin/update-profile")]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile(
+            IFormFile? Avatar,
+            string? FullName,
+            string? Phone,
+            string? City,
+            string? Ward,
+            string? District,
+            string? Address
+            )
+        {
+            var uProfileDTO = new UProfileDTO()
+            {
+                Avatar = Avatar,
+                FullName = FullName,
+                Phone = Phone,
+                City = City,
+                Ward = Ward,
+                District = District,
+                Address = Address
+            };
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Get user ID from claims
             var response = await _accountService.UpdateUserProfile(userId, uProfileDTO);
 
             if (!response.IsSucceed)
             {
-                return BadRequest(response.Message);
+                return BadRequest(response);
             }
 
-            return Ok(response.Message);
+            return Ok(response);
         }
         [HttpGet]
         [Route("Admin/listAccount")]
         [Authorize(Policy = "ADMIN")]
-        public async Task<IActionResult> ListAccount()
+        public async Task<IActionResult> Get()
         {
             try
             {
@@ -208,6 +244,78 @@ namespace CapstoneAuctioneerAPI.Controller
             catch (Exception ex)
             {
                 return StatusCode(500, new { Message = ex.Message });
+            }
+        }
+        [HttpPut]
+        [Route("Admin/lockaccount")]
+        [Authorize(Policy = "ADMIN")]
+        public async Task<IActionResult> lockaccount(string accountID)
+        {
+            try
+            {
+                var result = await _accountService.LockAccount(accountID);
+                if (result.IsSucceed)
+                {
+                    return Ok(result);
+                }
+                return BadRequest(result); // Return 400 with the error message
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message });
+            }
+        }
+        [HttpPut]
+        [Route("Admin/unlockaccount")]
+        [Authorize(Policy = "ADMIN")]
+        public async Task<IActionResult> unlockaccount(string accountID)
+        {
+            try
+            {
+                var result = await _accountService.UnLockAccount(accountID);
+                if (result.IsSucceed)
+                {
+                    return Ok(result);
+                }
+                return BadRequest(result); // Return 400 with the error message
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message });
+            }
+        }
+        [HttpGet("check-token-expiration")]
+        [Authorize]
+        public IActionResult CheckTokenExpiration()
+        {
+            var token = HttpContext.Request.Headers["Authorization"].ToString().Split(" ").Last();
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            if (jwtToken == null)
+                return BadRequest(new { Message = "Invalid token" });
+
+            var expClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Exp)?.Value;
+
+            if (expClaim == null)
+                return BadRequest(new { Message = "Expiration claim not found" });
+
+            var expDate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(expClaim));
+            var currentDate = DateTime.UtcNow;
+
+            if (expDate.UtcDateTime > currentDate)
+            {
+                return Ok(new
+                {
+                    Message = "Token is valid",
+                    Expiration = expDate.UtcDateTime,
+                    ExpiresIn = (expDate.UtcDateTime - currentDate).TotalSeconds
+                });
+            }
+            else
+            {
+                return BadRequest(new { Message = "Token has expired", Expiration = expDate.UtcDateTime });
             }
         }
     }
