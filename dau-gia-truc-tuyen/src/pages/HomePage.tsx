@@ -1,7 +1,30 @@
-import { useAuth } from '@contexts/AuthContext';
+import SearchBox from '../components/SearchBox';
+import PropertiesList from '../components/properties-list/PropertiesList';
+import NewsList from '../components/news-list/NewsList';
 
 const HomePage = () => {
-  const { username } = useAuth();
-  return <h1 className="flex justify-center items-center h-full text-center">Hi {username}</h1>;
+  return (
+    <>
+      <div className="flex flex-col">
+        <div className="w-full h-[450px] relative">
+          <img src="banner.jpg" alt="banner-img" className="object-cover h-full w-full" />
+          <SearchBox />
+          <div className="flex flex-col">
+            <div className="bg-white">
+              <div className=" max-w-1440px mt-28 ml-auto mr-auto">
+                <PropertiesList />
+              </div>
+            </div>
+              <div className="bg-lightGray">
+              <div className=" max-w-1440px ml-auto mr-auto pl-0 pr-0 pt-8">
+                <NewsList/>
+              </div>
+            </div>
+            <div></div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 };
 export default HomePage;
