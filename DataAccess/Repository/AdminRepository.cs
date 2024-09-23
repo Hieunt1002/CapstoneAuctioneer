@@ -2,6 +2,8 @@
 using DataAccess.DAO;
 using DataAccess.DTO;
 using DataAccess.IRepository;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +12,36 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Repository
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <seealso cref="DataAccess.IRepository.IAdminRepository" />
     public class AdminRepository : IAdminRepository
     {
+        /// <summary>
+        /// The account manager
+        /// </summary>
+        private readonly UserManager<Account> _accountManager;
+        /// <summary>
+        /// The upload
+        /// </summary>
+        private readonly IUploadRepository _upload;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AdminRepository"/> class.
+        /// </summary>
+        /// <param name="accountManager">The account manager.</param>
+        /// <param name="upload">The upload.</param>
+        public AdminRepository(UserManager<Account> accountManager, IUploadRepository upload)
+        {
+            _accountManager = accountManager;
+            _upload = upload;
+        }
+        /// <summary>
+        /// Accepts the auctioneer for admin.
+        /// </summary>
+        /// <param name="autioneer">The autioneer.</param>
+        /// <param name="idAuction">The identifier auction.</param>
+        /// <returns></returns>
         public async Task<ResponseDTO> AcceptAuctioneerForAdmin(AcceptAutioneerDTO autioneer, string idAuction)
         {
             try
@@ -26,6 +56,11 @@ namespace DataAccess.Repository
             }
         }
 
+        /// <summary>
+        /// Adds the category.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns></returns>
         public async Task<ResponseDTO> AddCategory(string name)
         {
             try
@@ -47,6 +82,11 @@ namespace DataAccess.Repository
             }
         }
 
+        /// <summary>
+        /// Deletes the category.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
         public async Task<ResponseDTO> DeleteCategory(int id)
         {
             try
@@ -64,6 +104,12 @@ namespace DataAccess.Repository
             }
         }
 
+        /// <summary>
+        /// Lists the auction.
+        /// </summary>
+        /// <param name="accountID">The account identifier.</param>
+        /// <param name="status">The status.</param>
+        /// <returns></returns>
         public async Task<List<AuctionnerAdminDTO>> ListAuction(string accountID, int status)
         {
             var auctioneerList = new List<AuctionnerAdminDTO>();
@@ -90,11 +136,11 @@ namespace DataAccess.Repository
                         formattedTimeRemaining = FormatTimeSpan(timeRemaining);
                     }
 
-                    auctioneer.AuctioneerID = item.ListAuctioneerID;
+                    auctioneer.AuctioneerID = item.ListAuctionID;
                     auctioneer.Category = item.Category;
                     auctioneer.Name = item.Name;
                     auctioneer.Image = $"http://capstoneauctioneer.runasp.net/api/Upload/read?filePath={item.Image}";
-                    auctioneer.NameAuctioneer = item.NameAuctioneer;
+                    auctioneer.NameAuction = item.NameAuction;
                     auctioneer.StartingPrice = item.StartingPrice;
                     auctioneer.StartDay = item.StartDay;
                     auctioneer.StartTime = item.StartTime;
@@ -108,10 +154,19 @@ namespace DataAccess.Repository
             }
             return auctioneerList;
         }
+        /// <summary>
+        /// Formats the time span.
+        /// </summary>
+        /// <param name="timeSpan">The time span.</param>
+        /// <returns></returns>
         private string FormatTimeSpan(TimeSpan timeSpan)
         {
             return $"{timeSpan.Days * 24 + timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
         }
+        /// <summary>
+        /// Lists the category.
+        /// </summary>
+        /// <returns></returns>
         public async Task<ResponseDTO> ListCategory()
         {
             try
@@ -125,6 +180,12 @@ namespace DataAccess.Repository
             }
         }
 
+        /// <summary>
+        /// Updates the category.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <param name="Namecategory">The namecategory.</param>
+        /// <returns></returns>
         public async Task<ResponseDTO> UpdateCategory(int id, string Namecategory)
         {
             try
@@ -148,6 +209,169 @@ namespace DataAccess.Repository
             {
                 return new ResponseDTO { IsSucceed = false, Message = "Update category failed" };
             }
+        }
+        /// <summary>
+        /// Profiles the user.
+        /// </summary>
+        /// <param name="username">The username.</param>
+        /// <returns></returns>
+        public async Task<ResponseDTO> ProfileUser(string username)
+        {
+            ProfileDTO profileDTO = null;
+            Account account = null;
+            AccountDetail accountDetail = null;
+            account = await _accountManager.FindByIdAsync(username);
+            var roles = await _accountManager.GetRolesAsync(account);
+            var role = roles.FirstOrDefault(); // Get the first role
+            if (account == null)
+            {
+                return new ResponseDTO { IsSucceed = false, Message = "Account not found" };
+            }
+
+            accountDetail = await AccountDAO.Instance.ProfileDAO(account.Id);
+            if (accountDetail == null)
+            {
+                return new ResponseDTO { IsSucceed = false, Message = "Account details not found" };
+            }
+            profileDTO = new ProfileDTO
+            {
+                AccountId = account.Id,
+                UserName = account.UserName,
+                Avatar = $"http://capstoneauctioneer.runasp.net/api/Upload/read?filePath={accountDetail.Avatar}",
+                FrontCCCD = $"http://capstoneauctioneer.runasp.net/api/Upload/read?filePath={accountDetail.FrontCCCD}",
+                BacksideCCCD = $"http://capstoneauctioneer.runasp.net/api/Upload/read?filePath={accountDetail.BacksideCCCD}",
+                Email = account.Email,
+                FullName = accountDetail.FullName,
+                Phone = accountDetail.Phone,
+                City = accountDetail.City,
+                Ward = accountDetail.Ward,
+                District = accountDetail.District,
+                Address = accountDetail.Address,
+                Status = account.Status,
+                Role = role
+            };
+            return new ResponseDTO { Result = profileDTO, IsSucceed = true, Message = "Successfully" };
+        }
+
+        /// <summary>
+        /// Auctions the detail.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        public async Task<ResponseDTO> AuctionDetail(int id)
+        {
+            try
+            {
+                var result = await AuctionDAO.Instance.AuctionDetail(id);
+                return new ResponseDTO { Result = result, IsSucceed = true, Message = "Show auction detail successfully" };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDTO { IsSucceed = false, Message = "Show auction detail failed" };
+            }
+        }
+
+        /// <summary>
+        /// Searchs the auctioneer admin.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <param name="content">The content.</param>
+        /// <returns></returns>
+        public async Task<List<AuctionnerAdminDTO>> SearchAuctioneerAdmin(string id, string content)
+        {
+            var auctioneerList = new List<AuctionnerAdminDTO>();
+            var result = await AuctionDAO.Instance.SearchAuctioneerAdmin(id, content);
+            foreach (var item in result)
+            {
+                // Determine if we should use Start or End day/time
+                var isOngoing = DateTime.ParseExact(item.StartDay, "dd/MM/yyyy", null) <= DateTime.Today &&
+                    TimeSpan.Parse(item.StartTime) <= DateTime.Now.TimeOfDay;
+                var auctionDate = isOngoing ? item.EndDay : item.StartDay;
+                var auctionTime = isOngoing ? item.EndTime : item.StartTime;
+
+                // Parse both the date and time together
+                if (DateTime.TryParseExact($"{auctionDate} {auctionTime}", "dd/MM/yyyy HH:mm", null,
+                                            System.Globalization.DateTimeStyles.None, out var startDateTime))
+                {
+                    var currentTime = DateTime.Now;
+                    var auctioneer = new AuctionnerAdminDTO(); // Create a new object in each iteration
+
+                    string formattedTimeRemaining = "";
+                    if (startDateTime > currentTime)
+                    {
+                        var timeRemaining = startDateTime - currentTime;
+                        formattedTimeRemaining = FormatTimeSpan(timeRemaining);
+                    }
+
+                    auctioneer.AuctioneerID = item.ListAuctionID;
+                    auctioneer.Category = item.Category;
+                    auctioneer.Name = item.Name;
+                    auctioneer.Image = $"http://capstoneauctioneer.runasp.net/api/Upload/read?filePath={item.Image}";
+                    auctioneer.NameAuction = item.NameAuction;
+                    auctioneer.StartingPrice = item.StartingPrice;
+                    auctioneer.StartDay = item.StartDay;
+                    auctioneer.StartTime = item.StartTime;
+                    auctioneer.EndDay = item.EndDay;
+                    auctioneer.EndTime = item.EndTime;
+                    auctioneer.StatusAuction = item.StatusAuction;
+                    auctioneer.Time = formattedTimeRemaining;
+
+                    auctioneerList.Add(auctioneer); // Add to the list
+                }
+            }
+            return auctioneerList;
+        }
+
+        /// <summary>
+        /// Lists your auctioneer category admin.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <param name="status">The status.</param>
+        /// <param name="category">The category.</param>
+        /// <returns></returns>
+        public async Task<List<AuctionnerAdminDTO>> ListYourAuctioneerCategoryAdmin(string id, int status, int category)
+        {
+            var auctioneerList = new List<AuctionnerAdminDTO>();
+            var result = await AuctionDAO.Instance.ListYourAuctioneerCategoryAdmin(id, status, category);
+            foreach (var item in result)
+            {
+                // Determine if we should use Start or End day/time
+                var isOngoing = DateTime.ParseExact(item.StartDay, "dd/MM/yyyy", null) <= DateTime.Today &&
+                    TimeSpan.Parse(item.StartTime) <= DateTime.Now.TimeOfDay;
+                var auctionDate = isOngoing ? item.EndDay : item.StartDay;
+                var auctionTime = isOngoing ? item.EndTime : item.StartTime;
+
+                // Parse both the date and time together
+                if (DateTime.TryParseExact($"{auctionDate} {auctionTime}", "dd/MM/yyyy HH:mm", null,
+                                            System.Globalization.DateTimeStyles.None, out var startDateTime))
+                {
+                    var currentTime = DateTime.Now;
+                    var auctioneer = new AuctionnerAdminDTO(); // Create a new object in each iteration
+
+                    string formattedTimeRemaining = "";
+                    if (startDateTime > currentTime)
+                    {
+                        var timeRemaining = startDateTime - currentTime;
+                        formattedTimeRemaining = FormatTimeSpan(timeRemaining);
+                    }
+
+                    auctioneer.AuctioneerID = item.ListAuctionID;
+                    auctioneer.Category = item.Category;
+                    auctioneer.Name = item.Name;
+                    auctioneer.Image = $"http://capstoneauctioneer.runasp.net/api/Upload/read?filePath={item.Image}";
+                    auctioneer.NameAuction = item.NameAuction;
+                    auctioneer.StartingPrice = item.StartingPrice;
+                    auctioneer.StartDay = item.StartDay;
+                    auctioneer.StartTime = item.StartTime;
+                    auctioneer.EndDay = item.EndDay;
+                    auctioneer.EndTime = item.EndTime;
+                    auctioneer.StatusAuction = item.StatusAuction;
+                    auctioneer.Time = formattedTimeRemaining;
+
+                    auctioneerList.Add(auctioneer); // Add to the list
+                }
+            }
+            return auctioneerList;
         }
     }
 }

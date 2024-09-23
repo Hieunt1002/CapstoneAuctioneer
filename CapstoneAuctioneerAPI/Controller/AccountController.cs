@@ -16,16 +16,32 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace CapstoneAuctioneerAPI.Controller
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <seealso cref="Microsoft.AspNetCore.OData.Routing.Controllers.ODataController" />
     [Route("api")]
     [ApiController]
     public class AccountController : ODataController
     {
+        /// <summary>
+        /// The account service
+        /// </summary>
         private readonly AccountService _accountService;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AccountController"/> class.
+        /// </summary>
+        /// <param name="accountService">The account service.</param>
         public AccountController(AccountService accountService)
         {
             _accountService = accountService;
         }
+        /// <summary>
+        /// Logins the specified login.
+        /// </summary>
+        /// <param name="login">The login.</param>
+        /// <returns></returns>
         [HttpPost]
         [Route("account/login")]
         public async Task<ActionResult> Login(Login login)
@@ -45,6 +61,11 @@ namespace CapstoneAuctioneerAPI.Controller
             }
         }
 
+        /// <summary>
+        /// Registers the specified account.
+        /// </summary>
+        /// <param name="account">The account.</param>
+        /// <returns></returns>
         [HttpPost]
         [Route("account/register")]
         public async Task<IActionResult> Register(AddAccountDTO account)
@@ -64,6 +85,11 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new ResponseDTO() { IsSucceed = false, Message = "Internal server error: " + ex.Message });
             }
         }
+        /// <summary>
+        /// Makes the adminsync.
+        /// </summary>
+        /// <param name="account">The account.</param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Admin/make-admin")]
         [Authorize(Policy = "ADMIN")]
@@ -84,6 +110,11 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new ResponseDTO() { IsSucceed = false, Message = "Internal server error: " + ex.Message });
             }
         }
+        /// <summary>
+        /// Changes the password.
+        /// </summary>
+        /// <param name="changepassDTO">The changepass dto.</param>
+        /// <returns></returns>
         [HttpPut]
         [Authorize]
         [Route("UserOrAdmin/changepassword")]
@@ -103,6 +134,10 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new { Message = ex.Message });
             }
         }
+        /// <summary>
+        /// Profiles the user.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Authorize]
         [Route("UserOrAdmin/profile")]
@@ -123,6 +158,11 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new { Message = ex.Message });
             }
         }
+        /// <summary>
+        /// Forgots the password.
+        /// </summary>
+        /// <param name="username">The username.</param>
+        /// <returns></returns>
         [HttpGet]
         [Route("account/forgot")]
         public async Task<ActionResult> ForgotPassword(string username)
@@ -141,6 +181,11 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new { Message = ex.Message });
             }
         }
+        /// <summary>
+        /// Resets the password.
+        /// </summary>
+        /// <param name="resetPasswordDTO">The reset password dto.</param>
+        /// <returns></returns>
         [HttpPut]
         [Route("account/resetPass")]
         public async Task<ActionResult> ResetPassword(ResetPasswordDTO resetPasswordDTO)
@@ -159,31 +204,44 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new { Message = ex.Message });
             }
         }
+        /// <summary>
+        /// Adds the information.
+        /// </summary>
+        /// <param name="avatar">The avatar.</param>
+        /// <param name="fullName">The full name.</param>
+        /// <param name="phone">The phone.</param>
+        /// <param name="frontCCCD">The front CCCD.</param>
+        /// <param name="backsideCCCD">The backside CCCD.</param>
+        /// <param name="city">The city.</param>
+        /// <param name="ward">The ward.</param>
+        /// <param name="district">The district.</param>
+        /// <param name="address">The address.</param>
+        /// <returns></returns>
         [HttpPut("UserOrAdmin/addInformation")]
         [Authorize]
         public async Task<IActionResult> AddInformation(
-            IFormFile? Avatar,
-            string? FullName,
-            string? Phone,
-            IFormFile? FrontCCCD,
-            IFormFile? BacksideCCCD,
-            string? City,
-            string? Ward,
-            string? District,
-            string? Address
+            IFormFile? avatar,
+            string? fullName,
+            string? phone,
+            IFormFile? frontCCCD,
+            IFormFile? backsideCCCD,
+            string? city,
+            string? ward,
+            string? district,
+            string? address
             )
         {
             var uProfileDTO = new AddInformationDTO()
             {
-                Avatar = Avatar,
-                FullName = FullName,
-                Phone = Phone,
-                FrontCCCD = FrontCCCD,
-                BacksideCCCD = BacksideCCCD,
-                City = City,
-                Ward = Ward,
-                District = District,
-                Address = Address
+                Avatar = avatar,
+                FullName = fullName,
+                Phone = phone,
+                FrontCCCD = frontCCCD,
+                BacksideCCCD = backsideCCCD,
+                City = city,
+                Ward = ward,
+                District = district,
+                Address = address
             };
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Get user ID from claims
             var response = await _accountService.AddInformation(userId, uProfileDTO);
@@ -195,27 +253,38 @@ namespace CapstoneAuctioneerAPI.Controller
 
             return Ok(response);
         }
+        /// <summary>
+        /// Updates the profile.
+        /// </summary>
+        /// <param name="avatar">The avatar.</param>
+        /// <param name="fullName">The full name.</param>
+        /// <param name="phone">The phone.</param>
+        /// <param name="city">The city.</param>
+        /// <param name="ward">The ward.</param>
+        /// <param name="district">The district.</param>
+        /// <param name="address">The address.</param>
+        /// <returns></returns>
         [HttpPut("UserOrAdmin/update-profile")]
         [Authorize]
         public async Task<IActionResult> UpdateProfile(
-            IFormFile? Avatar,
-            string? FullName,
-            string? Phone,
-            string? City,
-            string? Ward,
-            string? District,
-            string? Address
+            IFormFile? avatar,
+            string? fullName,
+            string? phone,
+            string? city,
+            string? ward,
+            string? district,
+            string? address
             )
         {
             var uProfileDTO = new UProfileDTO()
             {
-                Avatar = Avatar,
-                FullName = FullName,
-                Phone = Phone,
-                City = City,
-                Ward = Ward,
-                District = District,
-                Address = Address
+                Avatar = avatar,
+                FullName = fullName,
+                Phone = phone,
+                City = city,
+                Ward = ward,
+                District = district,
+                Address = address
             };
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Get user ID from claims
             var response = await _accountService.UpdateUserProfile(userId, uProfileDTO);
@@ -227,6 +296,10 @@ namespace CapstoneAuctioneerAPI.Controller
 
             return Ok(response);
         }
+        /// <summary>
+        /// Gets this instance.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("Admin/listAccount")]
         [Authorize(Policy = "ADMIN")]
@@ -246,6 +319,11 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new { Message = ex.Message });
             }
         }
+        /// <summary>
+        /// Lockaccounts the specified account identifier.
+        /// </summary>
+        /// <param name="accountID">The account identifier.</param>
+        /// <returns></returns>
         [HttpPut]
         [Route("Admin/lockaccount")]
         [Authorize(Policy = "ADMIN")]
@@ -265,6 +343,11 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new { Message = ex.Message });
             }
         }
+        /// <summary>
+        /// Unlockaccounts the specified account identifier.
+        /// </summary>
+        /// <param name="accountID">The account identifier.</param>
+        /// <returns></returns>
         [HttpPut]
         [Route("Admin/unlockaccount")]
         [Authorize(Policy = "ADMIN")]
@@ -284,6 +367,10 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new { Message = ex.Message });
             }
         }
+        /// <summary>
+        /// Checks the token expiration.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("check-token-expiration")]
         [Authorize]
         public IActionResult CheckTokenExpiration()
@@ -304,19 +391,21 @@ namespace CapstoneAuctioneerAPI.Controller
             var expDate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(expClaim));
             var currentDate = DateTime.UtcNow;
 
-            if (expDate.UtcDateTime > currentDate)
+            if (expDate.UtcDateTime.Date > currentDate.Date)
             {
                 return Ok(new
                 {
-                    Message = "Token is valid",
-                    Expiration = expDate.UtcDateTime,
-                    ExpiresIn = (expDate.UtcDateTime - currentDate).TotalSeconds
+                    IsValid = true
                 });
             }
             else
             {
-                return BadRequest(new { Message = "Token has expired", Expiration = expDate.UtcDateTime });
+                return Ok(new
+                {
+                    IsValid = false
+                });
             }
         }
+
     }
 }

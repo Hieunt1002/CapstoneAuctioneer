@@ -4,6 +4,7 @@ using BusinessObject.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BusinessObject.Migrations
 {
     [DbContext(typeof(ConnectDB))]
-    partial class ConnectDBModelSnapshot : ModelSnapshot
+    [Migration("20240903031331_Indit")]
+    partial class Indit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -188,10 +191,6 @@ namespace BusinessObject.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BetID"));
-
-                    b.Property<string>("BidTime")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("PriceBit")
                         .HasColumnType("decimal(18,2)");
@@ -455,13 +454,13 @@ namespace BusinessObject.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "73bc3c3a-44bb-4bba-a3f3-e9dc4129532b",
+                            Id = "f8c8702d-1daa-436a-8dd7-275d56ef30b6",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "402b0afa-53e0-400c-a6d8-3975439c54ca",
+                            Id = "dfca1ec8-4c98-46a5-9215-fe75aa689218",
                             Name = "user",
                             NormalizedName = "USER"
                         });

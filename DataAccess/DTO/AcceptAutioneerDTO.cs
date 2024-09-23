@@ -10,6 +10,6 @@ namespace DataAccess.DTO
     {
         public int AutioneerID { get; set; }
         public bool Status { get; set; }
-        public decimal PriceStep { get; set; }
+        public decimal? PriceStep { get; set; }
     }
 }
