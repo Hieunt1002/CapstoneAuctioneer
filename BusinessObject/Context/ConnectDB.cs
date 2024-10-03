@@ -38,6 +38,7 @@ namespace BusinessObject.Context
         public virtual DbSet<RegistAuction> RegistAuctioneers { get; set; }
         public virtual DbSet<TImage> TImages { get; set; }
         public virtual DbSet<AuctionDetail> AuctionDetails { get; set; }
+        public virtual DbSet<Deposit> Deposits { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -75,6 +76,11 @@ namespace BusinessObject.Context
                 .HasOne(p => p.ManagerAccount)
                 .WithMany(r => r.ManagedAuctions)
                 .HasForeignKey(p => p.Manager)
+                .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<Deposit>()
+                .HasOne(p => p.RegistAuctions)
+                .WithMany(r => r.Deposits)
+                .HasForeignKey(p => p.RAID)
                 .OnDelete(DeleteBehavior.NoAction);
             var adminRoleId = Guid.NewGuid().ToString();
             modelBuilder.Entity<IdentityRole>().HasData(

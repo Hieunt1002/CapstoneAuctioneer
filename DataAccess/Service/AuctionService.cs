@@ -85,9 +85,9 @@ namespace DataAccess.Service
         /// </summary>
         /// <param name="acutionId">The acution identifier.</param>
         /// <returns></returns>
-        public decimal TotalPay(int acutionId)
+        public async Task<InforPayMentDTO> TotalPay(int acutionId, string uid)
         {
-            var result = _auctioneerRepository.TotalPay(acutionId);
+            var result = await _auctioneerRepository.TotalPay(acutionId, uid);
             return result;
         }
         /// <summary>
@@ -96,8 +96,32 @@ namespace DataAccess.Service
         /// <param name="payment">The payment.</param>
         /// <param name="id">The id.</param>
         /// <returns></returns>
-        public async Task<ResponseDTO> CheckPayMent(Payment payment, int id)
+        public async Task<ResponseDTO> CheckPayMent(Payment payment, int id, string uid)
         {
+            var result = _auctioneerRepository.sendMailAfterPaymet(id, uid);
+            var notificationForBidder = new Notification
+            {
+                AccountID = result.AccountId,
+                Title = $"Thanh Toán thành công: {result.Title}",
+                Description = "Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của chúng tôi"
+            };
+            await NotificationDAO.Instance.AddNotification(notificationForBidder);
+
+            // Thông báo cho admin
+            var adminNotification = new Notification
+            {
+                AccountID = result.AccountAdminId,
+                Title = $"Thanh Toán thành công: {result.Title}",
+                Description = $"Người thắng cuộc: {result.BidderEmail}\nGiá thắng cuộc: {result.Price}\n và đã thanh toán thành công"
+            };
+            var auctioneerNotification = new Notification
+            {
+                AccountID = result.AccountAuctionId,
+                Title = $"Thanh Toán thành công: {result.Title}",
+                Description = $"Người thắng cuộc: {result.BidderEmail}\nGiá thắng cuộc: {result.Price}\n và đã thanh toán thành công"
+            };
+            await NotificationDAO.Instance.AddNotification(auctioneerNotification);
+            await NotificationDAO.Instance.AddNotification(adminNotification);
             return await _auctioneerRepository.CheckPayMent(payment, id);
         }
     }

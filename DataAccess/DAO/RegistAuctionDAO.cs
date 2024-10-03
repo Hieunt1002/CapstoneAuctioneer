@@ -27,7 +27,7 @@ namespace DataAccess.DAO
         private static readonly object _instanceLock = new object();
 
         /// <summary>
-        /// Prevents a default instance of the <see cref="RegistAuctionDAO"/> class from being created.
+        /// Prevents a default instance of the <see cref="RegistAuctionDAO" /> class from being created.
         /// </summary>
         private RegistAuctionDAO() { }
 
@@ -96,6 +96,7 @@ namespace DataAccess.DAO
                 var auctioneerList = await (from a in context.ListAuctions
                                             join ad in context.AuctionDetails on a.ListAuctionID equals ad.ListAuctionID
                                             join r in context.RegistAuctioneers on a.ListAuctionID equals r.ListAuctionID
+                                            join d in context.Deposits on r.RAID equals d.RAID
                                             where r.AccountID == userid && (statusauction == true || statusauction == false ? r.AuctionStatus == statusauction : a.StatusAuction == true)
                                             select new ListAuctioneerDTO
                                             {
@@ -166,7 +167,6 @@ namespace DataAccess.DAO
         /// <summary>
         /// Bets the asynchronous.
         /// </summary>
-        /// <param name="userid">The userid.</param>
         /// <param name="id">The identifier.</param>
         /// <returns></returns>
         public async Task<Bet> BetAsync(int id)
@@ -294,11 +294,9 @@ namespace DataAccess.DAO
         /// </summary>
         /// <param name="id">The identifier.</param>
         /// <returns></returns>
-        /// <exception cref="System.Exception">
-        /// An error occurred while retrieving the auctioneer: {ex.Message}
+        /// <exception cref="System.Exception">An error occurred while retrieving the auctioneer: {ex.Message}
         /// or
-        /// An unexpected error occurred: {ex.Message}
-        /// </exception>
+        /// An unexpected error occurred: {ex.Message}</exception>
         public async Task<List<ViewBidHistoryDTO>> ViewBidHistory(int id)
         {
             try
@@ -368,30 +366,27 @@ namespace DataAccess.DAO
         /// </summary>
         /// <param name="acutionId">The acution identifier.</param>
         /// <returns></returns>
-        /// <exception cref="System.Exception">
-        /// An error occurred while retrieving the auctioneer: {ex.Message}
+        /// <exception cref="System.Exception">An error occurred while retrieving the auctioneer: {ex.Message}
         /// or
-        /// An unexpected error occurred: {ex.Message}
-        /// </exception>
-        public decimal TotalPay(int acutionId)
+        /// An unexpected error occurred: {ex.Message}</exception>
+        public async Task<InforPayMentDTO> TotalPay(int acutionId, string uid)
         {
             try
             {
                 using (var context = new ConnectDB())
                 {
                     // Base query
-                    var query = from a in context.ListAuctions
-                                join r in context.RegistAuctioneers on a.ListAuctionID equals r.ListAuctionID
-                                join b in context.Bets on r.RAID equals b.RAID
-                                where r.ListAuctionID == acutionId && r.AuctionStatus == true
-                                select new ViewBidHistoryDTO
-                                {
-                                    ID = b.BetID,
-                                    Price = b.PriceBit,
-                                    DateAndTime = b.BidTime
-                                };
-                    var result = query.OrderByDescending(o => o.ID).FirstOrDefault();
-                    return result.Price == null ? 0m : result.Price;
+                    var query = await (from a in context.ListAuctions
+                                       join r in context.RegistAuctioneers on a.ListAuctionID equals r.ListAuctionID
+                                       join b in context.Bets on r.RAID equals b.RAID
+                                       where r.ListAuctionID == acutionId && r.AuctionStatus == true && r.AccountID == uid
+                                       select new InforPayMentDTO
+                                       {
+                                           IdResgiter = r.RAID,
+                                           nameAuction = a.NameAuction,
+                                           priceAuction = Convert.ToInt32(a.MoneyDeposit)
+                                       }).FirstOrDefaultAsync();
+                    return query;
                 }
             }
             catch (DbUpdateException ex)
@@ -403,6 +398,50 @@ namespace DataAccess.DAO
                 throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
             }
         }
+        /// <summary>
+        /// Totals the pay deposit.
+        /// </summary>
+        /// <param name="acutionId">The acution identifier.</param>
+        /// <returns></returns>
+        /// <exception cref="System.Exception">
+        /// An error occurred while retrieving the auctioneer: {ex.Message}
+        /// or
+        /// An unexpected error occurred: {ex.Message}
+        /// </exception>
+        public async Task<InforPayMentDTO> TotalPayDeposit(int acutionId, string uid)
+        {
+            try
+            {
+                using (var context = new ConnectDB())
+                {
+                    var query = await (from a in context.ListAuctions
+                                       join r in context.RegistAuctioneers on a.ListAuctionID equals r.ListAuctionID
+                                       where a.ListAuctionID == acutionId && r.AccountID == uid
+                                       select new InforPayMentDTO
+                                       {
+                                           IdResgiter = r.RAID,
+                                           nameAuction = a.NameAuction,
+                                           priceAuction = Convert.ToInt32(a.MoneyDeposit)
+                                       }).FirstOrDefaultAsync();
+                    return query;
+                }
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new Exception($"An error occurred while retrieving the auctioneer: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
+            }
+        }
+        /// <summary>
+        /// Updates the infor payment.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <exception cref="System.Exception">An error occurred while retrieving the auctioneer: {ex.Message}
+        /// or
+        /// An unexpected error occurred: {ex.Message}</exception>
         public void UpdateInforPayment(int id)
         {
             try
@@ -427,6 +466,12 @@ namespace DataAccess.DAO
                 throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
             }
         }
+        /// <summary>
+        /// Checkusertopayments the specified identifier.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        /// <exception cref="System.Exception">An unexpected error occurred: {ex.Message}</exception>
         public async Task<SetTimeForBatchDTO> checkusertopayment(int id)
         {
             try
@@ -447,7 +492,7 @@ namespace DataAccess.DAO
                                             join c in context.Accounts on a.Creator equals c.Id
                                             join u in context.Accounts on r.AccountID equals u.Id into userGroup // sử dụng into để tạo nhóm
                                             from u in userGroup.DefaultIfEmpty() // left join
-                                            where r.ListAuctionID == id && r.RAID != id
+                                            where r.ListAuctionID == query.ListAuctionID && r.RAID != id
                                             orderby b.PriceBit descending
                                             select new SetTimeForBatchDTO
                                             {
@@ -462,7 +507,9 @@ namespace DataAccess.DAO
                                                 Price = b.PriceBit,
                                                 RegistAuctioneer = r,
                                                 AccountId = u.Id,
-                                                Title = a.NameAuction
+                                                Title = a.NameAuction,
+                                                AccountAdminId = adm.Id,
+                                                AccountAuctionId = c.Id
                                             }).FirstOrDefaultAsync();
                         var account = await (from a in context.Accounts
                                              where a.Id == change.RegistAuctioneer.AccountID
@@ -494,6 +541,12 @@ namespace DataAccess.DAO
                 throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
             }
         }
+        /// <summary>
+        /// Seconds the check userto payment.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        /// <exception cref="System.Exception">An unexpected error occurred: {ex.Message}</exception>
         public async Task<bool> SecondCheckUsertoPayment(int id)
         {
             try
@@ -536,6 +589,92 @@ namespace DataAccess.DAO
                     }
 
                     return false; // Trả về false vì người dùng không thanh toán
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
+            }
+
+        }
+        /// <summary>
+        /// Sends the mail after paymet.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <param name="uid">The uid.</param>
+        /// <returns></returns>
+        /// <exception cref="System.Exception">An unexpected error occurred: {ex.Message}</exception>
+        public SetTimeForBatchDTO sendMailAfterPaymet(int id, string uid)
+        {
+            try
+            {
+                using (var context = new ConnectDB())
+                {
+                    var change = (from r in context.RegistAuctioneers
+                                  join a in context.ListAuctions on r.ListAuctionID equals a.ListAuctionID
+                                  join b in context.Bets on r.RAID equals b.RAID
+                                  join ad in context.AuctionDetails on r.ListAuctionID equals ad.ListAuctionID
+                                  join adm in context.Accounts on a.Manager equals adm.Id
+                                  join c in context.Accounts on a.Creator equals c.Id
+                                  join u in context.Accounts on r.AccountID equals u.Id
+                                  where r.ListAuctionID == id && r.AccountID == uid
+                                  select new SetTimeForBatchDTO
+                                  {
+                                      EmailAdmin = adm.Email,
+                                      AuctioneerEmail = c.Email,
+                                      BidderEmail = u.Email,
+                                      Price = b.PriceBit,
+                                      RegistAuctioneer = r,
+                                      AccountId = u.Id,
+                                      Title = a.NameAuction,
+                                      AccountAdminId = adm.Id,
+                                      AccountAuctionId = c.Id
+                                  }).FirstOrDefault();
+                    return change;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
+            }
+        }
+        /// <summary>
+        /// Payments for deposit.
+        /// </summary>
+        /// <param name="deposit">The deposit.</param>
+        /// <returns></returns>
+        public async Task<bool> PaymentForDeposit(Deposit deposit)
+        {
+            try
+            {
+                using (var context = new ConnectDB())
+                {
+                    context.Deposits.Add(deposit);
+                    await context.SaveChangesAsync();
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        /// <summary>
+        /// Gets the identifier register auction.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        /// <exception cref="System.Exception">An unexpected error occurred: {ex.Message}</exception>
+        public async Task<int> getIdRegisterAuction(int id)
+        {
+            try
+            {
+                using (var context = new ConnectDB())
+                {
+                    var result = await (from a in context.RegistAuctioneers
+                                        where a.ListAuctionID == id
+                                        select a.RAID).FirstOrDefaultAsync();
+                    return result;
                 }
             }
             catch (Exception ex)

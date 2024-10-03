@@ -64,7 +64,7 @@ namespace DataAccess.IRepository
         /// </summary>
         /// <param name="acutionId">The acution identifier.</param>
         /// <returns></returns>
-        decimal TotalPay(int acutionId);
+        Task<InforPayMentDTO> TotalPay(int acutionId, string uid);
         /// <summary>
         /// Checks the pay ment.
         /// </summary>
@@ -72,6 +72,7 @@ namespace DataAccess.IRepository
         /// <param name="id">The identifier.</param>
         /// <returns></returns>
         Task<ResponseDTO> CheckPayMent(Payment payment, int id);
+        SetTimeForBatchDTO sendMailAfterPaymet(int id, string uid);
 
     }
 }

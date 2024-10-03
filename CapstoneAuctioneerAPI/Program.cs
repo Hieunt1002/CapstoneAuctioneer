@@ -16,6 +16,19 @@ using CapstoneAuctioneerAPI;
 using DataAccess;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
+using System.Text.Unicode;
+using System.Globalization;
+using Net.payOS;
+
+/// <summary>
+/// Initializes a new instance of the <see cref="$Program" /> class.
+/// </summary>
+// config PayOS
+IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+
+PayOS payOS = new PayOS(configuration["Environment:PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find environment"),
+                    configuration["Environment:PAYOS_API_KEY"] ?? throw new Exception("Cannot find environment"),
+                    configuration["Environment:PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find environment"));
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -23,7 +36,7 @@ builder.Services.AddCors();
 builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson()
     .AddXmlDataContractSerializerFormatters();
-
+builder.Services.AddSingleton(payOS);
 builder.Services.AddSession();
 builder.Services.AddControllers();
 
@@ -122,7 +135,9 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddMvc();
 
 var app = builder.Build();
-
+var cultureInfo = new CultureInfo("vi-VN");
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

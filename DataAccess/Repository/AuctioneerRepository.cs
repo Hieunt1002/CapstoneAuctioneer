@@ -2,6 +2,7 @@
 using DataAccess.DAO;
 using DataAccess.DTO;
 using DataAccess.IRepository;
+using DataAccess.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Win32;
 using System;
@@ -65,6 +66,7 @@ namespace DataAccess.Repository
                 {
                     ListAuctionID = result.ID,
                     Image = $"http://capstoneauctioneer.runasp.net/api/Upload/read?filePath={result.Image}",
+                    moneyDeposit = result.MoneyDeposit,
                     NameAuction = result.NameAuction,
                     Description = result.Description,
                     StartingPrice = result.StartingPrice,
@@ -327,9 +329,9 @@ namespace DataAccess.Repository
         /// </summary>
         /// <param name="acutionId">The acution identifier.</param>
         /// <returns></returns>
-        public decimal TotalPay(int acutionId)
+        public async Task<InforPayMentDTO> TotalPay(int acutionId, string uid)
         {
-            return RegistAuctionDAO.Instance.TotalPay(acutionId);
+            return await RegistAuctionDAO.Instance.TotalPay(acutionId, uid);
         }
 
         /// <summary>
@@ -341,6 +343,11 @@ namespace DataAccess.Repository
         public async Task<ResponseDTO> CheckPayMent(Payment payment, int id)
         {
             return await RegistAuctionDAO.Instance.CheckPayMent(payment, id);
+        }
+
+        public SetTimeForBatchDTO sendMailAfterPaymet(int id, string uid)
+        {
+            return RegistAuctionDAO.Instance.sendMailAfterPaymet(id, uid);
         }
     }
 }
