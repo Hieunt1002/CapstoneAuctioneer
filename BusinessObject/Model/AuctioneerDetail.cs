@@ -14,14 +14,14 @@ namespace BusinessObject.Model
         [Key, ForeignKey("ListAuctioneer")]
         public int ListAuctioneerID { get; set; }
         [ForeignKey("Category")]
-        public int CategoryID { get; set; }
+        public int? CategoryID { get; set; }
         public string StartDay { get; set; }
         public string StartTime { get; set; }
         public string EndDay { get; set; }
         public string EndTime { get; set; }
         public int NumberofAuctionRounds { get; set; }
         public string TimePerLap { get; set; }
-        public decimal PriceStep { get; set; }
+        public decimal? PriceStep { get; set; }
         public string PaymentMethod { get; set; }
         public virtual ListAuctioneer ListAuctioneers { get; set; }
         public virtual Category Categorys { get; set; }

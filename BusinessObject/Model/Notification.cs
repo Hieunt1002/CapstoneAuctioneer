@@ -17,6 +17,7 @@ namespace BusinessObject.Model
         public string AccountID { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
+        public bool StatusNotification { get; set; }
         public virtual Account Accounts { get; set; }
     }
 }
