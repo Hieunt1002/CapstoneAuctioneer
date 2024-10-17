@@ -1114,5 +1114,28 @@ namespace DataAccess.DAO
                 throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
             }
         }
+        public async Task<List<AuctionnerAdminDTO>> listUserInAuction(int id)
+        {
+            try
+            {
+                using(var context = new ConnectDB())
+                {
+                    var user = await (from u in context.AccountDetails
+                                      join a in context.RegistAuctioneers on u.AccountID equals a.AccountID
+                                      join r in context.Deposits on a.RAID equals r.RAID
+                                      where a.ListAuctionID == id
+                                      select new AuctionnerAdminDTO
+                                      {
+                                          userId = u.AccountID,
+                                          userName = u.FullName
+                                      }).ToListAsync();
+                    return user;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
+            }
+        }
     }
 }
