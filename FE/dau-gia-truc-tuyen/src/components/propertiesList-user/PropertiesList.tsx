@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { Box, Tab, Typography, styled } from '@mui/material';
+import { Box, Button, Tab, Typography, styled } from '@mui/material';
 import AllProperties from '../all-properties/AllProperties';
 
 const StyledTabList = styled(TabList)({
@@ -25,9 +25,21 @@ const PropertiesList = () => {
   };
   return (
     <>
-      <Typography variant="h5" component="h2" fontWeight="bold">
-        TÀI SẢN ĐẤU GIÁ
-      </Typography>
+      <Box className="flex">
+        <Typography variant="h5" component="h2" fontWeight="bold">
+          TÀI SẢN ĐẤU GIÁ
+        </Typography>
+        <Box className="ml-auto">
+          <Button
+            href="/add-auction"
+            className="bg-green-800 text-white"
+            variant="contained"
+            style={{ backgroundColor: '#1f8f1f', color: 'white' }}
+          >
+            Thêm sản phẩm
+          </Button>
+        </Box>
+      </Box>
       <div>
         <TabContext value={value}>
           <Box>

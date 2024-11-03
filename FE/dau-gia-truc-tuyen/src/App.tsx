@@ -4,21 +4,14 @@ import MessageModal from '@common/message-modal/MessageModal';
 import ProtectedRoute from '@common/protected-route/ProtectedRoute';
 import { LoadingProvider, useLoading } from '@contexts/LoadingContext';
 import { MessageProvider } from '@contexts/MessageContext';
-import {
-  HomePage,
-  LoginPage,
-  SignUpPage,
-  DetailPage,
-  ListAuction,
-  AuctionDetail,
-  ForgotPage,
-  ResetPasswordPage,
-  ChangePasswordPage,
-  AuctionRoom,
-  ListYourAuction,
-} from '@pages/index';
-import { Route, Routes } from 'react-router-dom';
+import AddInfo from '@pages/Admin/AddInfo';
+import ListAccountPage from '@pages/Admin/ListAccountPage';
+import Profile from '@pages/Admin/Profile';
 import AddActionPage from '@pages/User/AddActionPage';
+import { HomePage, LoginPage, SignUpPage, Contract,
+  DetailPage, ListAuction, AuctionDetail, ForgotPage, InforUser,
+  ResetPasswordPage, ChangePasswordPage, ListYourAuction, AuctionRoom } from '@pages/index';
+import { Route, Routes } from 'react-router-dom';
 
 const AppRoutes: React.FC = () => {
   const { isLoading } = useLoading();
@@ -30,18 +23,23 @@ const AppRoutes: React.FC = () => {
       <Routes>
         <Route path="/" element={<ProtectedRoute />}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/thong-tin-chi-tiet/:id" element={<DetailPage />} />
+          <Route path="/thong-tin-chi-tiet/:id" element={<DetailPage/>} />
         </Route>
         <Route path="/add-auction" element={<AddActionPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/listAuction" element={<ListAuction />} />
-        <Route path="/auctionDetail" element={<AuctionDetail />} />
+        <Route path="/contract" element={<Contract />} />
+        <Route path="/listAuction/:id?/:name?" element={<ListAuction />} />
+        <Route path="/auctionDetail/:id" element={<AuctionDetail />} />
         <Route path="/sign-up" element={<SignUpPage />} />
+        <Route  path='/listuser' element={<ListAccountPage />}/>
+        <Route  path='/add-info' element={<AddInfo />}/>
+        <Route  path='/profile' element={<Profile />}/>
         <Route path="/forgot" element={<ForgotPage />} />
+        <Route path="/auctionRoom" element={<AuctionRoom />} />
         <Route path="/resetPasswordPage" element={<ResetPasswordPage />} />
         <Route path="/changePasswordPage" element={<ChangePasswordPage />} />
-        <Route path="/auctionRoom" element={<AuctionRoom />} />
         <Route path="/listYourAuction" element={<ListYourAuction />} />
+        <Route path="/inforUser/:id" element={<InforUser />} />
       </Routes>
     </>
   );

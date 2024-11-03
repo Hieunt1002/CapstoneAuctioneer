@@ -28,7 +28,7 @@ const HeaderTop = () => {
           <div className="flex gap-2">
             <img src="logo.png" alt="logo" width="40px" height="40px"/>
             <div className="flex flex-col">
-            Đấu giá trực tuyến
+            Cá độ trực tuyến
             <span className="text-[10px]">Trung tâm dịch vụ đấu giá tài sản thành phố Đà Nẵng</span>
 
             </div>

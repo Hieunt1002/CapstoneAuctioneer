@@ -1,5 +1,5 @@
 import SearchBox from '../../components/SearchBox';
-import PropertiesList from '../../components/properties-list/PropertiesList';
+import PropertiesList from '../../components/propertiesList-user/PropertiesList';
 
 const ListYourAuction = () => {
   return (
