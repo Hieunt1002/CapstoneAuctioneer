@@ -1,3 +1,5 @@
+import { useMessage } from '@contexts/MessageContext';
+import { createPaymentDeposit, registerForAuction } from '../queries/AuctionAPI';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -13,15 +15,36 @@ const AuctionContract = () => {
   const { 
     companyName, companyAddress, taxCode, representativeName, 
     sellerName, sellerID, sellerAddress, productName, 
-    websiteURL, effectiveDate, auctionInfo 
+    websiteURL, effectiveDate, auctionId, auctionInfo 
   } = location.state || {};
-
+  const { setErrorMessage, setSuccessMessage } = useMessage();
   const [accepted, setAccepted] = useState(false);
-
-  const handleAccept = () => {
-    console.log('auctionInfo', auctionInfo);
-    
+  const navigate = useNavigate();
+  const handleAccept = async(id: number) => {
+    console.log('auctionInfo', auctionId);
+    try {
+      
+      const create = await registerForAuction(id);
+      if(create.isSucceed){
+        const response = await createPaymentDeposit(id);
+        if (response) {
+            console.log(response);
+            window.location.href = response;
+        } else {
+            setErrorMessage(response.message);
+        } 
+      } else {
+        setErrorMessage(create.message);
+    } 
+            
+  } catch (error) {
+     setErrorMessage('Erro add infomation')
+  }
     setAccepted(true);
+    // Thực hiện hành động khi chấp nhận hợp đồng (có thể lưu vào cơ sở dữ liệu hoặc thông báo)
+  };
+  const handleCancel = () => {
+    navigate(-1);
     // Thực hiện hành động khi chấp nhận hợp đồng (có thể lưu vào cơ sở dữ liệu hoặc thông báo)
   };
   // const [bidHistory, setBidHistory] = useState<Bid[]>([]);
@@ -75,21 +98,21 @@ const AuctionContract = () => {
 
       <section className="space-y-4 mt-4">
         <h2 className="text-xl font-semibold text-gray-700">Điều 2: Thông tin về đấu giá</h2>
-        {auctionInfo && auctionInfo.map((item, index) => (
+        {auctionInfo && auctionInfo.map((item: any, index: any) => (
           <p key={index}><strong>{item.label}:</strong> {item.value}</p>
         ))}
       </section>
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-700">Điều 3: Quy định về tiền đặt trước</h2>
-        <p>Bên B đồng ý thanh toán tiền đặt trước là: <span className="italic">{auctionInfo?.find(item => item.label === 'Tiền đặt trước')?.value}</span></p>
+        <p>Bên B đồng ý thanh toán tiền đặt trước là: <span className="italic">{auctionInfo?.find((item: any) => item.label === 'Tiền đặt trước')?.value}</span></p>
         <p><strong>Lưu ý:</strong> Tiền đặt trước là một khoản không hoàn lại, trừ khi có quy định khác từ Bên A. Nếu Bên B không tham gia đấu giá đúng thời gian quy định, tiền đặt trước sẽ không được hoàn trả.</p>
       </section>
 
       <section className="space-y-4 mt-4">
         <h2 className="text-xl font-semibold text-gray-700">Điều 4: Quyền và nghĩa vụ của các bên</h2>
         <p>
-          <strong>Bên A</strong> có quyền:
+          <strong>Bên A</strong> có quyền: 
           <ul className="list-disc pl-6">
             <li>Cung cấp nền tảng đấu giá trực tuyến cho Bên B.</li>
             <li>Xử lý các vấn đề liên quan đến quá trình đấu giá, bao gồm việc xác minh các giao dịch và bảo mật dữ liệu.</li>
@@ -125,11 +148,16 @@ const AuctionContract = () => {
 
       <section className="flex justify-center mt-6">
         <button
-          onClick={handleAccept}
-          className={`px-8 py-2 font-semibold rounded-md ${accepted ? 'bg-green-500 text-white' : 'bg-blue-500 hover:bg-blue-700 text-white'}`}
-          disabled={accepted}
+          onClick={() => handleAccept(auctionId)}
+          className={`px-8 py-2 font-semibold rounded-md bg-green-500 text-white`}
         >
-          {accepted ? 'Đã chấp nhận hợp đồng' : 'Chấp nhận hợp đồng'}
+          Đã chấp nhận hợp đồng
+        </button>
+        <button
+          onClick={handleCancel}
+          className='px-8 py-2 font-semibold rounded-md bg-red-500 text-white ml-4'
+        >
+          Hủy
         </button>
       </section>
     </div>

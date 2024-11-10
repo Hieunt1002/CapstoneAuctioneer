@@ -24,7 +24,7 @@ const InfoRow: React.FC<InfoRowProps> = ({ label, value }) => (
 const DetailInformation: React.FC<DetailInformationProps> = ({ auctionDetailInfor }) => {
   const targetDate = convertDate(auctionDetailInfor?.startTime, auctionDetailInfor?.endDay);
   const navigate = useNavigate();
-  console.log(targetDate, 'targetDate');
+  console.log(auctionDetailInfor, 'targetDate');
 
   const auctionInfo = [
     { label: 'Giá khởi điểm', value: `${auctionDetailInfor?.startingPrice} VNĐ` },
@@ -52,6 +52,7 @@ const DetailInformation: React.FC<DetailInformationProps> = ({ auctionDetailInfo
         productName: 'Sản phẩm XYZ',
         websiteURL: 'https://example.com',
         effectiveDate: '05/11/2024',
+        auctionId: auctionDetailInfor.listAuctionID,
         
         // Auction data
         auctionInfo: [
@@ -82,8 +83,8 @@ const DetailInformation: React.FC<DetailInformationProps> = ({ auctionDetailInfo
         {auctionInfo.map((item, index) => (
           <InfoRow key={index} label={item.label} value={item.value} />
         ))}
-        <div className='mt-8 ml-auto'>
-          <button className="bg-green-500 text-white px-2 py-1 rounded mr-2" onClick={handleNavigateToContract}>Đi tới hợp đồng</button>
+        <div className='mt-8 ml-auto mr-auto'>
+          <button className="bg-blue-500 text-white px-2 py-1 rounded mr-2 w-56 h-10" onClick={handleNavigateToContract}>THAM GIA ĐẤU GIÁ</button>
         </div>
       </div>
     </div>
