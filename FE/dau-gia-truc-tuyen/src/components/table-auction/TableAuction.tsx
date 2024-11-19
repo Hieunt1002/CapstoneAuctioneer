@@ -22,6 +22,7 @@ const TableAuction = ({ tabValue, id, name, status }: { tabValue: number; id?: s
   const [selectedAuctionID, setSelectedAuctionID] = useState<number | null>(null); // Auction ID state
   const [isApproveModalCancelOpen, setApproveModalCancelOpen] = useState(false); // Modal cancel state
   const [price, setPrice] = useState<number | null>(null);
+  const [time, setTime] = useState('');
 
   useEffect(() => {
     
@@ -98,7 +99,7 @@ const TableAuction = ({ tabValue, id, name, status }: { tabValue: number; id?: s
   const handleModalApprove = async () => {
     if (selectedAuctionID) {
 
-      const response = await approveAuction(selectedAuctionID, true, price);
+      const response = await approveAuction(selectedAuctionID, true, price, time);
       if (response.isSucceed) {
         fetchListAuction();
         alert('Bạn đã phê duyệt thành công');
@@ -111,7 +112,7 @@ const TableAuction = ({ tabValue, id, name, status }: { tabValue: number; id?: s
   };
   const handleModalReject = async () => {
     if (selectedAuctionID) {
-      const response = await approveAuction(selectedAuctionID, false, price);
+      const response = await approveAuction(selectedAuctionID, false, price, time);
       if (response.isSucceed) {
         fetchListAuction();
         alert('Bạn đã từ chối với đơn hàng đấu giá này');
@@ -282,6 +283,7 @@ const TableAuction = ({ tabValue, id, name, status }: { tabValue: number; id?: s
           onClose={handleModalClose}
           setPrice={setPrice}
           onConfirm={handleModalApprove} // Ensure this is correct
+          setTime={setTime}
         />
         <CancelModal
           open={isApproveModalCancelOpen} // Use the correct state for the cancel modal

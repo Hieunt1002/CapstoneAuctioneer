@@ -289,12 +289,12 @@ export const registerForAuction = async (id: number) => {
   }
 };
 
-export const approveAuction = async (autioneerID: number, status: boolean, priceStep: number | null) => {
+export const approveAuction = async (autioneerID: number, status: boolean, priceStep: number | null, timeRoom: string) => {
   try {
     const token = getToken();
     const response = await axiosInstance.put(
       `api/Admin/ApproveorRejectAuction`,
-      { autioneerID, status, priceStep },
+      { autioneerID, status, priceStep, timeRoom },
       {
         headers: {
           Authorization: `Bearer ${token}`,

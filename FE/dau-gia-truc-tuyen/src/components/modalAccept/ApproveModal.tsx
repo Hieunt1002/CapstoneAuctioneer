@@ -1,31 +1,24 @@
 // components/ModalComponents.tsx
 import React from 'react';
-import {
-  Modal,
-  Box,
-  Typography,
-  Button,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-} from '@mui/material';
+import { Modal, Box, Typography, Button, TextField } from '@mui/material';
 
 interface ModalProps {
   open: boolean;
   onClose: () => void;
-  onConfirm?: () => void;
+  onConfirm: () => void;
   setPrice?: (price: number) => void;
   users?: any[];
+  setTime?: any;
 }
 
 // ApproveModal Component
-export const ApproveModal: React.FC<ModalProps> = ({ open, onClose, onConfirm, setPrice }) => {
+export const ApproveModal: React.FC<ModalProps> = ({
+  open,
+  onClose,
+  onConfirm,
+  setPrice,
+  setTime,
+}) => {
   const style = {
     position: 'absolute' as 'absolute',
     top: '50%',
@@ -36,7 +29,19 @@ export const ApproveModal: React.FC<ModalProps> = ({ open, onClose, onConfirm, s
     boxShadow: 24,
     p: 4,
   };
+  const [hours, setHours] = React.useState<number | ''>('');
+  const [minutes, setMinutes] = React.useState<number | ''>('');
 
+  const handleTimeChange = () => {
+    if (setTime) {
+      // Chuyển giờ và phút thành tổng số phút
+      const formattedHours = hours.toString().padStart(2, '0'); 
+      const formattedMinutes = minutes.toString().padStart(2, '0'); 
+
+      const total = `${formattedHours}:${formattedMinutes}`;
+      setTime(total);
+    }
+  };
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={style}>
@@ -50,12 +55,48 @@ export const ApproveModal: React.FC<ModalProps> = ({ open, onClose, onConfirm, s
           InputProps={{
             style: { fontSize: '14px' },
           }}
-          onChange={(e) => setPrice ? setPrice(Number(e.target.value)) : null} 
+          onChange={(e) => (setPrice ? setPrice(Number(e.target.value)) : null)}
           required
           sx={{ marginTop: '20px' }}
         />
+        {/* Vòng thời gian */}
+        <Box sx={{ display: 'flex', gap: 2, marginTop: '20px' }}>
+          {/* Nhập số giờ */}
+          <TextField
+            label="Số giờ"
+            type="number"
+            value={hours}
+            onChange={(e) => setHours(Number(e.target.value))}
+            inputProps={{
+              min: 0, // Không cho nhập số âm
+              step: 1, // Tăng theo từng giờ
+              max: 99,
+            }}
+            sx={{ flex: 1 }}
+          />
+          {/* Nhập số phút */}
+          <TextField
+            label="Số phút"
+            type="number"
+            value={minutes}
+            onChange={(e) => setMinutes(Number(e.target.value))}
+            inputProps={{
+              min: 0,
+              max: 59, // Giới hạn phút từ 0 đến 59
+              step: 1,
+            }}
+            sx={{ flex: 1 }}
+          />
+        </Box>
         <Box mt={2} display="flex" justifyContent="space-between">
-          <Button variant="contained" color="success" onClick={onConfirm}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => {
+              handleTimeChange();
+              onConfirm();
+            }}
+          >
             Duyệt
           </Button>
           <Button variant="outlined" color="error" onClick={onClose}>
