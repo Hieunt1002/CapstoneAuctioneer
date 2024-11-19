@@ -104,6 +104,20 @@ export const getAuctionRoomDetail = async (id: number = 0) => {
     throw error;
   }
 };
+
+export const getAuctionRegistration = async () => {
+  try {
+    const token = getToken();
+    const response = await axiosInstance.get(`api/auction/listofregisteredbidders`, {
+       headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch auction details', error);
+    throw error;
+  }
+};
+
 // Admin: Fetch list of auctions based on status
 export const getListAuctionAdmin = async (status: number) => {
   try {
@@ -123,6 +137,21 @@ export const getListAuctionOfUser = async (id: string, status: number) => {
     const token = getToken();
     const response = await axiosInstance.get(
       `api/Admin/listAuctioneerByUser?iduser=${id}&status=${status}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error('Failed to fetch user auction list');
+  }
+};
+
+export const getListAuctionRegisterOfUser = async (id: string, status: number) => {
+  try {
+    const token = getToken();
+    const response = await axiosInstance.get(
+      `api/Admin/ListAuctioneerRegisterByUser?iduser=${id}&status=${status}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -340,5 +369,20 @@ export const submitEditAuctionForm = async (data: AuctionDetail) => {
   } catch (error) {
     console.error('Error submitting auction form:', error);
     throw error;
+  }
+};
+
+export const deleteAuction = async (id: number) => {
+  try {
+    const token = getToken();
+    const response = await axiosInstance.delete(
+      `api/DeleteAuctionner?id=${id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error('Failed to fetch category-based auction list');
   }
 };

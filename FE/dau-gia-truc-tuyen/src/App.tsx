@@ -32,6 +32,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/" element={<ProtectedRoute />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/thong-tin-chi-tiet/:id" element={<DetailPage/>} />
+          <Route path="/phien-dau-gia/:id" element={<DetailPage/>} />
+
         </Route>
         <Route path="/add-auction" element={<AddActionPage />} />
         <Route path="/edit-auction" element={<EditActionPage />} />
@@ -40,7 +42,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/listAuction" element={<ListAuction />} />
         <Route path="/auctionDetail" element={<AuctionDetail />} />
         <Route path="/contract" element={<Contract />} />
-        <Route path="/listAuction/:id?/:name?" element={<ListAuction />} />
+        <Route path="/listAuction" element={<ListAuction />} />
         <Route path="/auctionDetail/:id" element={<AuctionDetail />} />
         <Route path="/sign-up" element={<SignUpPage />} />
         <Route  path='/listuser' element={<ListAccountPage />}/>

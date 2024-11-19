@@ -87,10 +87,10 @@ const CardList = ({
       </span>
     </p>
     <button
-      className="mt-4 w-full bg-black text-white font-bold py-2 px-4 rounded group-hover:bg-sky-700"
+      className="mt-4 w-full bg-green-900 text-white font-bold py-2 px-4 rounded group-hover:bg-sky-700"
       onClick={handleDetailClick}
     >
-      Đấu giá
+      VIEW
     </button>
   </div>
 </div>
