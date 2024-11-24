@@ -144,6 +144,7 @@ namespace DataAccess.DAO
                                                                     StartDay = ad.StartDay ?? null,
                                                                     StartTime = ad.StartTime ?? null,
                                                                     EndDay = ad.EndDay ?? null,
+                                                                    TimePerLap = ad.TimePerLap,
                                                                     EndTime = ad.EndTime ?? null,
                                                                     PriceStart = a.StartingPrice,
                                                                     winningBid = context.Bets
@@ -151,7 +152,7 @@ namespace DataAccess.DAO
                                                                                 .OrderByDescending(b => b.PriceBit)
                                                                                 .Select(b => b.PriceBit) // Get the highest bid price
                                                                                 .FirstOrDefault(),
-                                                                }).OrderByDescending(o => o.Id).ToListAsync();
+                                                                }).Distinct().OrderByDescending(o => o.Id).ToListAsync();
                 return auctioneerList;
             }
         }
@@ -174,6 +175,7 @@ namespace DataAccess.DAO
                                             select new ListAuctioneerDTO
                                             {
                                                 Id = a.ListAuctionID,
+                                                CategoryId = ad.CategoryID,
                                                 Img = a.Image,
                                                 Name = a.NameAuction,
                                                 StartDay = ad.StartDay,
@@ -186,7 +188,7 @@ namespace DataAccess.DAO
                                                                                     .OrderByDescending(b => b.PriceBit)
                                                                                     .Select(b => b.PriceBit) // Get the highest bid price
                                                                                     .FirstOrDefault(),
-                                            }).OrderByDescending(o => o.Id).ToListAsync();
+                                            }).Distinct().OrderByDescending(o => o.Id).ToListAsync();
 
                 return auctioneerList;
             }

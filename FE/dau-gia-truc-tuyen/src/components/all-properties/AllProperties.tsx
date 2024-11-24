@@ -9,6 +9,7 @@ interface AllPropertiesProps {
   value: string;
 }
 const AllProperties = ({ listAllAuction, value }: AllPropertiesProps) => {
+   
   return (
     <div className="grid grid-cols-4 gap-4">
       {listAllAuction?.map((card) => (
@@ -18,9 +19,11 @@ const AllProperties = ({ listAllAuction, value }: AllPropertiesProps) => {
           key={card.id}
           imgSrc={card.img}
           title={card.name}
+          endDay={card.endDay}
+          endTime={card.endTime}
           priceStart={card.priceStart}
           startDay={card.startDay}
-          targetDate={convertDate(card?.startTime, card?.endDay )}
+          targetDate={convertDate(card?.endTime, card?.endDay)}
           url={value}
         />
       ))}

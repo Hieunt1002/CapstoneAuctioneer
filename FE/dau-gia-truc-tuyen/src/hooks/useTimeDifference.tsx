@@ -19,6 +19,7 @@ const useTimeDifference = (roomDate: string, timeRound: string) => {
   useEffect(() => {
     const currentDate = new Date();
     const roomDateTime = parseDateTime(roomDate);
+    console.log(roomDate);
 
     const differenceInSeconds = Math.floor((roomDateTime.getTime() - currentDate.getTime()) / 1000);
     const roundTimeInSeconds = parseTimeRoundToSeconds(timeRound);

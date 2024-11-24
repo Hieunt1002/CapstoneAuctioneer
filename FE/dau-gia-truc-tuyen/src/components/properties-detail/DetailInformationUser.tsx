@@ -53,18 +53,18 @@ const DetailInformationUser: React.FC<DetailInformationProps> = ({ auctionDetail
     setApproveModalCancelOpen(true); // Open cancel modal
   };
 
-  useEffect(() => {
-    const socket = new WebSocket(`ws://capstoneauctioneer.runasp.net/api/viewBidHistory?id=${1}`);
+  // useEffect(() => {
+  //   const socket = new WebSocket(`ws://capstoneauctioneer.runasp.net/api/viewBidHistory?id=${1}`);
 
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      setBidHistory(data);
-    };
+  //   socket.onmessage = (event) => {
+  //     const data = JSON.parse(event.data);
+  //     setBidHistory(data);
+  //   };
 
-    return () => {
-      socket.close();
-    };
-  }, []);
+  //   return () => {
+  //     socket.close();
+  //   };
+  // }, []);
   const calculateNewEndTime = (
     endTime: string | undefined,
     timePerLap: string | undefined
@@ -149,7 +149,7 @@ const DetailInformationUser: React.FC<DetailInformationProps> = ({ auctionDetail
   ];
 
   const handleNavigateToContract = () => {
-    navigate('/contract');
+    navigate('/edit-auction', {state : {id : auctionDetailInfor.listAuctionID}});
   };
 
   return (

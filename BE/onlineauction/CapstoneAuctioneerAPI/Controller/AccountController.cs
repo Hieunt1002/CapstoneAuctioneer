@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.OData.Query;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Identity;
 using BusinessObject.Model;
+using Google.Apis.Auth;
 
 namespace CapstoneAuctioneerAPI.Controller
 {
@@ -62,6 +63,44 @@ namespace CapstoneAuctioneerAPI.Controller
             catch (Exception ex)
             {
                 return StatusCode(500, new { Message = ex.Message });
+            }
+        }
+
+        [HttpPost("google")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        {
+            try
+            {
+                var payload = await GoogleJsonWebSignature.ValidateAsync(request.TokenId, new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = new[] { "800544947907-gqq1fut5e84qhsdtapqs1nf1f3rao28r.apps.googleusercontent.com" }
+                });
+
+                // Tạo JWT Token
+                var role = "user";
+                var token = _accountService.GenerateNewJsonWebToken(payload.Email, role);
+
+                //var check = new
+                //{
+                //    Role = role,
+                //    Token = token,
+                //    Check = user.Result.BacksideCCCD == null ? false : true,
+                //};
+                //return new ResponseDTO() { Result = check, IsSucceed = true, Message = "Successfully" };
+                return Ok(new
+                {
+                    token,
+                    user = new
+                    {
+                        payload.Email,
+                        payload.Name,
+                        payload.Picture
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(new { Message = "Invalid Google Token", Error = ex.Message });
             }
         }
 
@@ -290,25 +329,8 @@ namespace CapstoneAuctioneerAPI.Controller
         [HttpPut("UserOrAdmin/update-profile")]
         [Authorize]
         public async Task<IActionResult> UpdateProfile(
-            IFormFile? avatar,
-            string? fullName,
-            string? phone,
-            string? city,
-            string? ward,
-            string? district,
-            string? address
-            )
+            [FromForm] UProfileDTO uProfileDTO)
         {
-            var uProfileDTO = new UProfileDTO()
-            {
-                Avatar = avatar,
-                FullName = fullName,
-                Phone = phone,
-                City = city,
-                Ward = ward,
-                District = district,
-                Address = address
-            };
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Get user ID from claims
             var response = await _accountService.UpdateUserProfile(userId, uProfileDTO);
 

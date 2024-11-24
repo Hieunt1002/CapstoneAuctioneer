@@ -18,7 +18,7 @@ const SuccessPage = () => {
       if (isFetch) {
         const updatePaymentStatus = async () => {
           try {
-            if (id && status === 'SUCCESSED') {
+            if (id && status === 'PAID') {
               await UpdatePayment(Number(id), 'success');
             }
           } catch (error) {

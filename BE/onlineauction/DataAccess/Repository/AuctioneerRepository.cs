@@ -47,7 +47,7 @@ namespace DataAccess.Repository
         public async Task<AutionDTO> AuctionDetail(int id)
         {
             var result = await AuctionDAO.Instance.AuctionDetail(id);
-            if(result.StatusAuction != "Not approved yet")
+            if (result.StatusAuction != "Not approved yet")
             {
                 bool hasStartDay = !string.IsNullOrEmpty(result.StartDay);
                 bool hasStartTime = !string.IsNullOrEmpty(result.StartTime);
@@ -103,7 +103,7 @@ namespace DataAccess.Repository
                 return auction;
             }
             return null;
-            
+
         }
 
         /// <summary>
@@ -132,11 +132,16 @@ namespace DataAccess.Repository
             if (status == 1)
             {
                 auction = result.Where(ad =>
-                    !string.IsNullOrEmpty(ad.StartDay) &&
-                    DateTime.ParseExact(ad.StartDay, "dd/MM/yyyy", null) > DateTime.Today ||
-                    (!string.IsNullOrEmpty(ad.StartDay) && !string.IsNullOrEmpty(ad.StartTime) &&
-                    DateTime.ParseExact(ad.StartDay, "dd/MM/yyyy", null) == DateTime.Today &&
-                    TimeSpan.Parse(ad.StartTime) > DateTime.Now.TimeOfDay)).ToList();
+                    !string.IsNullOrEmpty(ad.EndDay) &&
+                    !string.IsNullOrEmpty(ad.EndTime) &&
+                    !string.IsNullOrEmpty(ad.TimePerLap) &&
+                    DateTime.TryParseExact(ad.EndDay, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateTime endDay) &&
+                    TimeSpan.TryParse(ad.EndTime, out TimeSpan endTime) &&
+                    TimeSpan.TryParse(ad.TimePerLap, out TimeSpan rollTime) &&
+                    endDay.Add(endTime) < DateTime.Now &&
+                    endDay.Add(endTime).Add(rollTime) > DateTime.Now
+                ).ToList();
+
             }
             else if (status == 2)
             {
@@ -156,10 +161,13 @@ namespace DataAccess.Repository
             {
                 auction = result.Where(ad =>
                     !string.IsNullOrEmpty(ad.EndDay) &&
-                    DateTime.ParseExact(ad.EndDay, "dd/MM/yyyy", null) < DateTime.Today ||
-                    (!string.IsNullOrEmpty(ad.EndDay) && !string.IsNullOrEmpty(ad.EndTime) &&
-                    DateTime.ParseExact(ad.EndDay, "dd/MM/yyyy", null) == DateTime.Today &&
-                    TimeSpan.Parse(ad.EndTime) < DateTime.Now.TimeOfDay)).ToList();
+                    !string.IsNullOrEmpty(ad.EndTime) &&
+                    !string.IsNullOrEmpty(ad.TimePerLap) &&
+                    DateTime.TryParseExact(ad.EndDay, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateTime endDay) &&
+                    TimeSpan.TryParse(ad.EndTime, out TimeSpan endTime) &&
+                    TimeSpan.TryParse(ad.TimePerLap, out TimeSpan rollTime) && 
+                    endDay.Add(endTime).Add(rollTime) < DateTime.Now
+                ).ToList();
             }
             return auction; // Return the list of auctioneer DTOs
         }
@@ -278,9 +286,13 @@ namespace DataAccess.Repository
         /// <param name="content">The content.</param>
         /// <param name="uid">The uid.</param>
         /// <returns></returns>
-        public async Task<List<ListAuctioneerDTO>> SearchAuctioneer(string content, string uid)
+        public async Task<List<ListAuctioneerDTO>> SearchAuctioneer(string content, string uid, int categoryId)
         {
             var result = await AuctionDAO.Instance.SearchAuctioneer(content, uid);
+            if (categoryId > 0)
+            {
+                result = result.Where(c => c.CategoryId.Equals(categoryId)).ToList();
+            }
 
             return result; // Trả về danh sách các DTO
         }
@@ -378,7 +390,7 @@ namespace DataAccess.Repository
             try
             {
                 var result = await AuctionDAO.Instance.ListAuctioneerByUser(id, status);
-                return new ResponseDTO {Result = result, IsSucceed = true, Message = "Successfully" };
+                return new ResponseDTO { Result = result, IsSucceed = true, Message = "Successfully" };
             }
             catch
             {

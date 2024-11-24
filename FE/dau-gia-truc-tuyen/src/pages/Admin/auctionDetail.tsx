@@ -22,6 +22,7 @@ const AuctionDetail = () => {
   const [bidHistory, setBidHistory] = useState([]);
   const [currentPrice, setCurrentPrice] = useState(0);
   const targetDate = convertDate(detailAuction?.endTime, detailAuction?.endDay);
+  const [time, setTime] = useState('');
   const { id } = useParams();
   useEffect(() => {
     fetchDetailAuction();
@@ -55,7 +56,7 @@ const AuctionDetail = () => {
   };
   const handleModalApprove = async () => {
     if (id) {
-      const response = await approveAuction(Number(id), true, price);
+      const response = await approveAuction(Number(id), true, price, time);
       if (response.isSucceed) {
         fetchDetailAuction();
         alert('Bạn đã phê duyệt thành công');
@@ -68,7 +69,7 @@ const AuctionDetail = () => {
   };
   const handleModalReject = async () => {
     if (id) {
-      const response = await approveAuction(Number(id), false, price);
+      const response = await approveAuction(Number(id), false, price, time);
       if (response.isSucceed) {
         fetchDetailAuction();
         alert('Bạn đã từ chối với đơn hàng đấu giá này');
@@ -127,7 +128,7 @@ const AuctionDetail = () => {
     <>
       <div className="flex justify-between py-1">
         <div className="font-bold">{label}</div>
-        <div className="font-bold">{value}</div>
+        <div className="">{value}</div>
       </div>
       <div className="h-[2px] w-full bg-gray-200"></div>
     </>
@@ -374,6 +375,7 @@ const AuctionDetail = () => {
         onClose={handleModalClose}
         setPrice={setPrice}
         onConfirm={handleModalApprove} // Ensure this is correct
+        setTime={setTime}
       />
       <CancelModal
         open={isApproveModalCancelOpen} // Use the correct state for the cancel modal

@@ -159,5 +159,11 @@ namespace DataAccess.Service
             var result = await _accountRepository.VerifyOtp(model);
             return result;
         }
+
+        public string GenerateNewJsonWebToken(string email, string role)
+        {
+            var result = _accountRepository.GenerateJwtToken(email, role);
+            return result;
+        }
     }
 }

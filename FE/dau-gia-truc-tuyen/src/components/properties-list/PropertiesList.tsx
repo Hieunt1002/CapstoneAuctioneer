@@ -3,7 +3,7 @@ import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { Box, Tab, Typography, styled } from '@mui/material';
 import AllProperties from '../all-properties/AllProperties';
 import { getAuctionRegistration, getListAuction } from '../../queries/index';
-import {Auction} from 'types';
+import { Auction } from 'types';
 
 const StyledTabList = styled(TabList)({
   '& .MuiTabs-indicator': {
@@ -18,37 +18,46 @@ const StyledTabList = styled(TabList)({
     borderBottom: '2px solid rgb(241, 155, 64)',
   },
 });
-
-const PropertiesList = () => {
+interface PropertySearch {
+  searchResults: any;
+  isSearch: boolean;
+}
+const PropertiesList = ({ searchResults, isSearch }: PropertySearch) => {
   const [value, setValue] = useState('0');
-  const [listAllAuction, setListAllAuction] = useState<Auction[]>([]); // Initialize as an empty array
+  const [listAllAuction, setListAllAuction] = useState<Auction[]>([]);
 
   useEffect(() => {
     const fetchListAuction = async () => {
       try {
-        const response =
-          value === '1'
-            ? await getAuctionRegistration()
-            : await getListAuction(value || '0');
-        
-        if (response?.isSucceed) {
-          setListAllAuction(Array.isArray(response.result) ? response.result : []);
+        console.log('value', value);
+        if (isSearch) {
+          setListAllAuction(searchResults.result);
+          setValue('0');
         } else {
-          console.error('Failed to fetch auction list');
+          const response =
+            value === '4' ? await getAuctionRegistration() : await getListAuction(value || '0');
+          if (response?.isSucceed) {
+            setListAllAuction(Array.isArray(response.result) ? response.result : []);
+          } else {
+            console.error('Failed to fetch auction list');
+          }
         }
       } catch (error) {
         console.error('Error fetching auction list:', error);
       }
     };
-    if(listAllAuction) {
-      setListAllAuction([])
+    if (listAllAuction) {
+      setListAllAuction([]);
     }
     fetchListAuction();
-  }, [value]);
+  }, [value, isSearch]);
   const handleChange = (event: any, newValue: string) => {
     setValue(newValue);
   };
-
+  const getRole = () => {
+    const role = localStorage.getItem('role');
+    return role;
+  };
   return (
     <>
       <Typography variant="h5" component="h2" fontWeight="bold">
@@ -59,17 +68,17 @@ const PropertiesList = () => {
           <Box>
             <StyledTabList onChange={handleChange} aria-label="lab">
               <Tab label="Tất cả" value="0" />
-              <Tab label="Đã đăng kí" value="1" />
+              <Tab label="Đang diễn ra" value="1" />
               <Tab label="Sắp diễn ra" value="2" />
               <Tab label="Đã kết thúc" value="3" />
+              <Tab label="Đã đăng ký" value="4" />
             </StyledTabList>
           </Box>
           <TabPanel value={value}>
-            <AllProperties 
-              listAllAuction={listAllAuction} 
-              value={value === '1' ? 'phien-dau-gia' : 'thong-tin-chi-tiet'}
+            <AllProperties
+              listAllAuction={listAllAuction}
+              value={value === '4' ? 'phien-dau-gia' : 'thong-tin-chi-tiet'}
             />
-
           </TabPanel>
         </TabContext>
       </div>

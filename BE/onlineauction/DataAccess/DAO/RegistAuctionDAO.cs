@@ -107,6 +107,7 @@ namespace DataAccess.DAO
                                                 StartDay = ad.StartDay,
                                                 StartTime = ad.StartTime,
                                                 EndDay = ad.EndDay,
+                                                TimePerLap = ad.TimePerLap,
                                                 EndTime = ad.EndTime,
                                                 PriceStart = a.StartingPrice,
                                                 winningBid = context.Bets

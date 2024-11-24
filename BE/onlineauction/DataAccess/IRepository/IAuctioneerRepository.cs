@@ -53,7 +53,7 @@ namespace DataAccess.IRepository
         /// <param name="content">The content.</param>
         /// <param name="uid">The uid.</param>
         /// <returns></returns>
-        Task<List<ListAuctioneerDTO>> SearchAuctioneer(string content, string uid);
+        Task<List<ListAuctioneerDTO>> SearchAuctioneer(string content, string uid, int categoryId);
         /// <summary>
         /// Listofregisteredbidderses the specified userid.
         /// </summary>
