@@ -22,7 +22,8 @@ const AuctionDetail = () => {
   const [bidHistory, setBidHistory] = useState([]);
   const [currentPrice, setCurrentPrice] = useState(0);
   const targetDate = convertDate(detailAuction?.endTime, detailAuction?.endDay);
-  const [time, setTime] = useState('');
+  const [hours, setHours] = useState<number | ''>('');
+  const [minutes, setMinutes] = useState<number | ''>('');
   const { id } = useParams();
   useEffect(() => {
     fetchDetailAuction();
@@ -56,7 +57,10 @@ const AuctionDetail = () => {
   };
   const handleModalApprove = async () => {
     if (id) {
-      const response = await approveAuction(Number(id), true, price, time);
+      const formattedHours = (hours || 0).toString().padStart(2, '0');
+      const formattedMinutes = (minutes || 0).toString().padStart(2, '0');
+      const totalTime = `${formattedHours}:${formattedMinutes}`;
+      const response = await approveAuction(Number(id), true, price, totalTime);
       if (response.isSucceed) {
         fetchDetailAuction();
         alert('Bạn đã phê duyệt thành công');
@@ -69,7 +73,7 @@ const AuctionDetail = () => {
   };
   const handleModalReject = async () => {
     if (id) {
-      const response = await approveAuction(Number(id), false, price, time);
+      const response = await approveAuction(Number(id), false, price, "00:00");
       if (response.isSucceed) {
         fetchDetailAuction();
         alert('Bạn đã từ chối với đơn hàng đấu giá này');
@@ -350,7 +354,7 @@ const AuctionDetail = () => {
                   <img
                     src={`http://capstoneauctioneer.runasp.net/api/read?filePath=${detailAuction.signatureImg}`}
                     alt={detailAuction.signatureImg}
-                    className="absolute ml-[9%] h-96 pt-3"
+                    className="absolute ml-[9%] h-[28%] pt-3"
                   />
                 </Box>
               </Grid>
@@ -362,7 +366,7 @@ const AuctionDetail = () => {
                   <img
                     src={`http://capstoneauctioneer.runasp.net/api/read?filePath=${detailAuction.tImange.imange}`}
                     alt={detailAuction.tImange.imange}
-                    className="absolute ml-[18%] h-96 pt-3"
+                    className="absolute ml-[18%] h-[28%] pt-3"
                   />
                 </Box>
               </Grid>
@@ -371,12 +375,13 @@ const AuctionDetail = () => {
         </Box>
       </Box>
       <ApproveModal
-        open={isApproveModalOpen}
-        onClose={handleModalClose}
-        setPrice={setPrice}
-        onConfirm={handleModalApprove} // Ensure this is correct
-        setTime={setTime}
-      />
+          open={isApproveModalOpen}
+          onClose={handleModalClose}
+          setPrice={setPrice}
+          onConfirm={handleModalApprove} // Ensure this is correct
+          setHours={setHours}
+          setMinutes={setMinutes}
+        />
       <CancelModal
         open={isApproveModalCancelOpen} // Use the correct state for the cancel modal
         onClose={handleModalCancelClose}

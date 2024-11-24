@@ -70,8 +70,6 @@ const CardList = ({
       console.error("Invalid endDate:", endDateTimeString);
       return new Date(); // Nếu không hợp lệ, trả về ngày hiện tại
     }
-  
-    console.log('endDate', endDate);
     return endDate; // Trả về đối tượng Date đã được tính toán
   };
 
@@ -80,7 +78,6 @@ const CardList = ({
     endDay: string = ''
   ): boolean => {
     const finalTime = calculateFinalTime(endTime, endDay);
-    console.log('finalTime', finalTime);
     
     return finalTime <= new Date(); // Kiểm tra nếu thời gian cuối đã qua
   };
@@ -109,7 +106,7 @@ const CardList = ({
         {isProperties ? (
           <div
             className={`absolute bottom-5 left-1/2 transform -translate-x-1/2 ${
-              !isEndTimePassed(endTime, endDay) ? 'bg-green-500' : 'bg-orange-500'
+              !isEndTimePassed(endTime, endDay) ? 'bg-green-500' : targetDate > new Date() ? 'bg-orange-500'  : 'bg-yellow-500'
             } bg-opacity-90 p-2 rounded-full w-11/12 flex justify-center items-center gap-4 group-hover:hidden`}
           >
             <CountdownTimer targetDate={targetDate} />

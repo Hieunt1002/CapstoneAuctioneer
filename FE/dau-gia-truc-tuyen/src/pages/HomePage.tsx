@@ -11,11 +11,7 @@ const HomePage = () => {
   const [isSearch, setIsSearch] = useState(false);
   const handleSubmit = async (categoryId: number, value: string) => {
     try {
-      console.log('Category ID:', categoryId);
-      console.log('Search Value:', value);
-
       const response = await getSearchAuction(categoryId, value);
-      console.log('Search Results:', response);
       setIsSearch(true);
       setSearchResults(response);
     } catch (error) {

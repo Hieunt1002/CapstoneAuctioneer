@@ -6,7 +6,7 @@ export interface Auction {
   priceStart: string;
   startDay: string;
   startTime: string;
-  TimePerLap: string;
+  timePerLap: string;
   endTime: string;
   endDay: string;
 }

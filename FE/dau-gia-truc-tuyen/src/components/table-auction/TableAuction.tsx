@@ -23,6 +23,8 @@ const TableAuction = ({ tabValue, id, name, status }: { tabValue: number; id?: s
   const [isApproveModalCancelOpen, setApproveModalCancelOpen] = useState(false); // Modal cancel state
   const [price, setPrice] = useState<number | null>(null);
   const [time, setTime] = useState('');
+  const [hours, setHours] = useState<number | ''>('');
+  const [minutes, setMinutes] = useState<number | ''>('');
 
   useEffect(() => {
     
@@ -62,7 +64,7 @@ const TableAuction = ({ tabValue, id, name, status }: { tabValue: number; id?: s
     }
   };
   const fetchListUser = async () => {
-    const response = await getListUserAdmin(1);
+    const response = await getListUserAdmin(Number(id));
     console.log(response, 'data');
     if (response?.isSucceed) {
       setUser(response?.result);
@@ -98,8 +100,11 @@ const TableAuction = ({ tabValue, id, name, status }: { tabValue: number; id?: s
 
   const handleModalApprove = async () => {
     if (selectedAuctionID) {
-
-      const response = await approveAuction(selectedAuctionID, true, price, time);
+      const formattedHours = (hours || 0).toString().padStart(2, '0');
+      const formattedMinutes = (minutes || 0).toString().padStart(2, '0');
+      const totalTime = `${formattedHours}:${formattedMinutes}`;
+      
+      const response = await approveAuction(selectedAuctionID, true, price, totalTime);
       if (response.isSucceed) {
         fetchListAuction();
         alert('Bạn đã phê duyệt thành công');
@@ -138,6 +143,14 @@ const TableAuction = ({ tabValue, id, name, status }: { tabValue: number; id?: s
       setListAllAuction(response?.result);
     } else {
       console.error('fetch list fail');
+    }
+  };
+  const handleTimeChange = () => {
+    const formattedHours = (hours || 0).toString().padStart(2, '0');
+    const formattedMinutes = (minutes || 0).toString().padStart(2, '0');
+    const totalTime = `${formattedHours}:${formattedMinutes}`;
+    if (setTime) {
+      setTime(totalTime);
     }
   };
   const style = {
@@ -283,7 +296,8 @@ const TableAuction = ({ tabValue, id, name, status }: { tabValue: number; id?: s
           onClose={handleModalClose}
           setPrice={setPrice}
           onConfirm={handleModalApprove} // Ensure this is correct
-          setTime={setTime}
+          setHours={setHours}
+          setMinutes={setMinutes}
         />
         <CancelModal
           open={isApproveModalCancelOpen} // Use the correct state for the cancel modal

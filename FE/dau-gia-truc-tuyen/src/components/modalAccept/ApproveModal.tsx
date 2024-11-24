@@ -8,7 +8,8 @@ interface ModalProps {
   onConfirm: () => void;
   setPrice?: (price: number) => void;
   users?: any[];
-  setTime?: any;
+  setHours?: (time: number) => void;
+  setMinutes?: (time: number) => void;
 }
 
 // ApproveModal Component
@@ -17,7 +18,8 @@ export const ApproveModal: React.FC<ModalProps> = ({
   onClose,
   onConfirm,
   setPrice,
-  setTime,
+  setHours,
+  setMinutes,
 }) => {
   const style = {
     position: 'absolute' as 'absolute',
@@ -29,19 +31,8 @@ export const ApproveModal: React.FC<ModalProps> = ({
     boxShadow: 24,
     p: 4,
   };
-  const [hours, setHours] = React.useState<number | ''>('');
-  const [minutes, setMinutes] = React.useState<number | ''>('');
 
-  const handleTimeChange = () => {
-    if (setTime) {
-      // Chuyển giờ và phút thành tổng số phút
-      const formattedHours = hours.toString().padStart(2, '0'); 
-      const formattedMinutes = minutes.toString().padStart(2, '0'); 
-
-      const total = `${formattedHours}:${formattedMinutes}`;
-      setTime(total);
-    }
-  };
+  
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={style}>
@@ -65,8 +56,7 @@ export const ApproveModal: React.FC<ModalProps> = ({
           <TextField
             label="Số giờ"
             type="number"
-            value={hours}
-            onChange={(e) => setHours(Number(e.target.value))}
+            onChange={(e) => (setHours ? setHours(Number(e.target.value)) : null)}
             inputProps={{
               min: 0, // Không cho nhập số âm
               step: 1, // Tăng theo từng giờ
@@ -78,8 +68,7 @@ export const ApproveModal: React.FC<ModalProps> = ({
           <TextField
             label="Số phút"
             type="number"
-            value={minutes}
-            onChange={(e) => setMinutes(Number(e.target.value))}
+            onChange={(e) => (setMinutes ? setMinutes(Number(e.target.value)) : null)}
             inputProps={{
               min: 0,
               max: 59, // Giới hạn phút từ 0 đến 59
@@ -93,7 +82,6 @@ export const ApproveModal: React.FC<ModalProps> = ({
             variant="contained"
             color="success"
             onClick={() => {
-              handleTimeChange();
               onConfirm();
             }}
           >
@@ -158,7 +146,7 @@ export const UserModal: React.FC<ModalProps> = ({ open, onClose, users }) => {
     <Modal open={open} onClose={onClose}>
       <Box sx={style}>
         <Typography variant="h6" component="h2">
-          Danh sách người dùng
+          Danh sách người đăng ký
         </Typography>
         {users && users.length > 0 ? (
           <Box
@@ -183,7 +171,7 @@ export const UserModal: React.FC<ModalProps> = ({ open, onClose, users }) => {
             </table>
           </Box>
         ) : (
-          <Typography>Không có người dùng.</Typography>
+          <Typography>Không có người đăng ký.</Typography>
         )}
         <Box mt={2} display="flex" justifyContent="space-between">
           <Button variant="contained" color="primary" onClick={onClose}>
