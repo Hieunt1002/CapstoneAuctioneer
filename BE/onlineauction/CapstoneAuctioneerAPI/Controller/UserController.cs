@@ -56,7 +56,6 @@ namespace CapstoneAuctioneerAPI.Controller
                 Description = request.description,
                 StartingPrice = request.startingPrice,
                 CategoryID = request.categoryID,
-                signatureImg = request.signatureImg,
                 image = request.imageVerification
             };
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

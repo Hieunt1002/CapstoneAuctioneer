@@ -4,12 +4,12 @@ import { Box, Tab, Typography, styled } from '@mui/material';
 import AllProperties from '../all-properties/AllProperties';
 import { getAuctionRegistration, getListAuction } from '../../queries/index';
 import { Auction } from 'types';
+import { useLocation } from 'react-router-dom';
 
 const StyledTabList = styled(TabList)({
   '& .MuiTabs-indicator': {
     backgroundColor: 'rgb(241, 155, 64)', // Set custom background color for the indicator
   },
-
   '& .MuiButtonBase-root': {
     outline: 'none',
   },
@@ -18,46 +18,62 @@ const StyledTabList = styled(TabList)({
     borderBottom: '2px solid rgb(241, 155, 64)',
   },
 });
+
 interface PropertySearch {
   searchResults: any;
   isSearch: boolean;
+  setIsSearch: (data: boolean) => void;
 }
-const PropertiesList = ({ searchResults, isSearch }: PropertySearch) => {
+
+const PropertiesList = ({ searchResults, isSearch, setIsSearch }: PropertySearch) => {
+  const location = useLocation();
+  const { data } = location.state || {};
+
+  useEffect(() => {
+    if (data) {
+      setValue(data);
+    }
+  }, [data]);
+
   const [value, setValue] = useState('0');
   const [listAllAuction, setListAllAuction] = useState<Auction[]>([]);
 
   useEffect(() => {
     const fetchListAuction = async () => {
       try {
-        console.log('value', value);
         if (isSearch) {
-          setListAllAuction(searchResults.result);
           setValue('0');
+          setListAllAuction(searchResults.result);
+          return;
+        }
+
+        // Lấy dữ liệu dựa trên giá trị `value`
+        const response =
+          value === '4' ? await getAuctionRegistration() : await getListAuction(value || '0');
+
+        if (response?.isSucceed) {
+          setListAllAuction(Array.isArray(response.result) ? response.result : []);
         } else {
-          const response =
-            value === '4' ? await getAuctionRegistration() : await getListAuction(value || '0');
-          if (response?.isSucceed) {
-            setListAllAuction(Array.isArray(response.result) ? response.result : []);
-          } else {
-            console.error('Failed to fetch auction list');
-          }
+          console.error('Failed to fetch auction list');
         }
       } catch (error) {
         console.error('Error fetching auction list:', error);
       }
     };
-    if (listAllAuction) {
-      setListAllAuction([]);
-    }
+
     fetchListAuction();
-  }, [value, isSearch]);
+  }, [value, isSearch, searchResults]);
+
   const handleChange = (event: any, newValue: string) => {
+    setIsSearch(false);
     setValue(newValue);
   };
+
   const getRole = () => {
     const role = localStorage.getItem('role');
     return role;
   };
+
   return (
     <>
       <Typography variant="h5" component="h2" fontWeight="bold">
@@ -85,4 +101,5 @@ const PropertiesList = ({ searchResults, isSearch }: PropertySearch) => {
     </>
   );
 };
+
 export default PropertiesList;

@@ -21,6 +21,7 @@ export interface AuctionUser {
   endTime: string;
   endDay: string;
   statusAuction: string;
+  timePerLap:string;
 }
 
 export interface AuctionDetails {

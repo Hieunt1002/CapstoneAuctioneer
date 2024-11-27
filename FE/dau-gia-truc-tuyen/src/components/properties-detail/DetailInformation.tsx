@@ -22,7 +22,6 @@ const InfoRow: React.FC<InfoRowProps> = ({ label, value }) => (
 );
 
 const DetailInformation: React.FC<DetailInformationProps> = ({ auctionDetailInfor }) => {
-  const targetDate = convertDate(auctionDetailInfor?.endTime, auctionDetailInfor?.endDay);
   const navigate = useNavigate();
   const calculateNewEndTime = (endTime: string, timePerLap: string): string => {
     // Tách giờ và phút từ endTime
@@ -47,34 +46,55 @@ const DetailInformation: React.FC<DetailInformationProps> = ({ auctionDetailInfo
     return `${newHours}:${newMinutes}`;
   };
 
-  const updateEndTimeAndDay = (
+  const calculateNewTargetDate = (
     endTime: string,
     endDay: string,
     timePerLap: string
-  ): { newEndTime: string; newEndDay: string } => {
-      const [endHours, endMinutes] = endTime.split(':').map(Number);
-      const [lapHours, lapMinutes] = timePerLap.split(':').map(Number);
+  ): Date => {
+    if (!endTime || !endDay || !timePerLap) {
+      console.warn("Missing required parameters for calculateNewTargetDate:", {
+        endTime,
+        endDay,
+        timePerLap,
+      });
+      return new Date(); // Trả về thời gian hiện tại nếu thiếu tham số
+    }
   
-      const endDate = new Date(endDay); // Chuyển đổi endDay thành Date
-      endDate.setHours(endHours, endMinutes, 0, 0);
+    try {
+      // Sử dụng convertDate để tạo đối tượng ngày ban đầu
+      const endDate = convertDate(endTime, endDay);
+      const now = new Date();
+
+      // Tách giờ và phút từ TimePerLap
+      const [hours, minutes] = timePerLap.split(':').map(Number);
   
-      endDate.setHours(endDate.getHours() + lapHours);
-      endDate.setMinutes(endDate.getMinutes() + lapMinutes);
+      if (endDate < now) {
+        // Nếu endDate đã qua, cộng thêm giờ và phút từ TimePerLap
+        endDate.setHours(endDate.getHours() + hours);
+        endDate.setMinutes(endDate.getMinutes() + minutes);
+      }
   
-      const newHours = endDate.getHours().toString().padStart(2, '0');
-      const newMinutes = endDate.getMinutes().toString().padStart(2, '0');
-      const newEndDay = endDate.toISOString().split('T')[0]; // Lấy ngày định dạng YYYY-MM-DD
-  
-      return { newEndTime: `${newHours}:${newMinutes}`, newEndDay };
+      return endDate; // Trả về đối tượng Date
+    } catch (error) {
+      console.error("Error in calculateNewTargetDate:", { endTime, endDay, timePerLap, error });
+      return new Date(); // Trả về giá trị mặc định trong trường hợp lỗi
+    }
   };
   
+  // Tính toán ngày mục tiêu mới
+  const targetDate = calculateNewTargetDate(auctionDetailInfor?.endTime, auctionDetailInfor?.endDay, auctionDetailInfor?.timePerLap);
   const calculateFinalTime = (
     endTime: string,
     endDay: string
   ): Date => {
     const [endHours, endMinutes] = endTime.split(':').map(Number); // Tách giờ và phút từ endTime
   
-    const endDate = new Date(endDay); // Tạo đối tượng Date từ endDay
+    // Chuyển đổi định dạng dd/MM/yyyy thành yyyy-MM-dd
+    const [day, month, year] = endDay.split('/');
+    const isoDate = `${year}-${month}-${day}`; // Định dạng yyyy-MM-dd
+  
+    const endDate = new Date(isoDate); // Tạo đối tượng Date từ định dạng ISO
+  
     endDate.setHours(endHours, endMinutes, 0, 0); // Gán giờ và phút từ endTime
   
     return endDate; // Trả về đối tượng Date đã được tính toán
@@ -85,9 +105,18 @@ const DetailInformation: React.FC<DetailInformationProps> = ({ auctionDetailInfo
     endDay: string
   ): boolean => {
     const finalTime = calculateFinalTime(endTime, endDay);
+    console.log('finalTime', finalTime);
     return finalTime > new Date(); // Kiểm tra nếu thời gian kết thúc lớn hơn hiện tại
   };
-  
+
+  const isEndTimePassed = (
+    endTime: string = '',
+    endDay: string = ''
+  ): boolean => {
+    const finalTime = calculateFinalTime(endTime, endDay);
+    
+    return finalTime <= new Date(); // Kiểm tra nếu thời gian cuối đã qua
+  };
   const auctionInfo = [
     { label: 'Giá khởi điểm', value: `${auctionDetailInfor?.startingPrice} VNĐ` },
     { label: 'Bước giá', value: `${auctionDetailInfor.priceStep} VNĐ` },
@@ -136,7 +165,9 @@ const DetailInformation: React.FC<DetailInformationProps> = ({ auctionDetailInfo
     <div className="container flex flex-col gap-2 h-full">
       <div className="flex gap-1">
         <div className="font-bold line-clamp-2">{auctionDetailInfor?.description}</div>
-        <div className=" bg-green-500 bg-opacity-90 p-2 rounded-full w-60">
+        <div className={`${
+              !isEndTimePassed(auctionDetailInfor.endTime, auctionDetailInfor.endDay) ? 'bg-green-500' : targetDate > new Date() ? 'bg-orange-500'  : 'bg-yellow-500'
+            } bg-opacity-90 p-2 rounded-full w-60`} >
           <CountdownTimer targetDate={targetDate} />
         </div>
       </div>

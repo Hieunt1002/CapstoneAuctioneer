@@ -81,7 +81,7 @@ namespace DataAccess.Repository
             {
                 return new ResponseDTO { IsSucceed = false, Message = "Failed" };
             }
-            
+
         }
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace DataAccess.Repository
                 {
                     var bet = new PlacingABid
                     {
-                        PriceBit= check.PriceBit,
+                        PriceBit = check.PriceBit,
                         RAID = idauction
                     };
                     var result = await RegistAuctionDAO.Instance.PlaceBid(bet, auction.price);
@@ -137,7 +137,7 @@ namespace DataAccess.Repository
                     var result = await RegistAuctionDAO.Instance.PlaceBid(bet, auction.price);
                     return result;
                 }
-                
+
             }
             catch (Exception ex)
             {
@@ -152,7 +152,7 @@ namespace DataAccess.Repository
         /// <param name="register">The register.</param>
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
-        public async Task<ResponseDTO> RegiterAuctioneer(string userID,RegisterAuctioneerDTO register)
+        public async Task<ResponseDTO> RegiterAuctioneer(string userID, RegisterAuctioneerDTO register)
         {
             var account = await _accountManager.FindByIdAsync(userID);
             if (account == null)
@@ -162,7 +162,7 @@ namespace DataAccess.Repository
             var auctioneer = new ListAuction
             {
                 Creator = account.Id,
-                Image =  await _upload.SaveFileAsync(register.Image, "ListAuctioneer", userID),
+                Image = await _upload.SaveFileAsync(register.Image, "ListAuctioneer", userID),
                 NameAuction = register.NameAuction,
                 Description = register.Description,
                 StartingPrice = register.StartingPrice,
@@ -182,59 +182,17 @@ namespace DataAccess.Repository
                         PaymentMethod = "bid up"
                     };
                     var resultdetail = await AuctionDAO.Instance.AddAuctionDetail(detailauctioneer);
-                    if(resultdetail)
+                    if (resultdetail)
                     {
-                        var keys = _signatureHelper.GenerateKeys();
-                        if (register.signatureImg == null || register.signatureImg.Length == 0)
+                        var img = new TImage
                         {
-                            return new ResponseDTO { IsSucceed = false, Message = "Hình ảnh chữ ký không được để trống." };
-                        }
-
-                        // Chuyển đổi IFormFile sang Base64
-                        string base64SignatureImage;
-
-                        using (var memoryStream = new MemoryStream())
-                        {
-                            await register.signatureImg.CopyToAsync(memoryStream);
-                            byte[] imageBytes = memoryStream.ToArray();
-                            base64SignatureImage = Convert.ToBase64String(imageBytes);
-                        }
-                        var signature = _signatureHelper.SignData(base64SignatureImage, keys.privateKey);
-                        var fileAttach = new DigitalSignature
-                        {
-                            ListAuctionID = id,
-                            Base64SignatureImage= base64SignatureImage,
-                            SignatureImg = await _upload.SaveFileAsync(register.signatureImg, "DigitalSignature", userID),
-                            Signature = signature,
-                            PublicKey = keys.publicKey,
-                            PrivateKey = keys.privateKey,
-                            CreatedAt = DateTime.Now,
+                            ListAuctionID = detailauctioneer.ListAuctionID,
+                            Imange = await _upload.SaveFileAsync(register.image, "TImage", userID)
                         };
-                        var resultfile = await FileAttachmentsDAO.Instance.AddFileAttachment(fileAttach);
-                        if (resultfile)
+                        var resultimg = await FileAttachmentsDAO.Instance.AddImage(img);
+                        if (resultimg)
                         {
-                            var file = await FileAttachmentsDAO.Instance.GetFileAttachments(id);
-                            if(file is not null)
-                            {
-                                var img = new TImage
-                                {
-                                    FileAID = file.FileAID,
-                                    Imange =  await _upload.SaveFileAsync(register.image, "TImage", userID)
-                                };
-                                var resultimg = await FileAttachmentsDAO.Instance.AddImage(img);
-                                if (resultimg)
-                                {
-                                    return new ResponseDTO { IsSucceed = true, Message = "Add AddAuction successfully" };
-                                }
-                                else
-                                {
-                                    return new ResponseDTO { IsSucceed = false, Message = "Add AddAuction failed" };
-                                }
-                            }
-                            else
-                            {
-                                return new ResponseDTO { IsSucceed = false, Message = "Add AddAuction failed" };
-                            }
+                            return new ResponseDTO { IsSucceed = true, Message = "Add AddAuction successfully" };
                         }
                         else
                         {
@@ -248,7 +206,7 @@ namespace DataAccess.Repository
                     return new ResponseDTO { IsSucceed = false, Message = "Add AddAuction failed" };
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new ResponseDTO { IsSucceed = false, Message = "Add Auctioneer failed: " + ex.Message };
             }

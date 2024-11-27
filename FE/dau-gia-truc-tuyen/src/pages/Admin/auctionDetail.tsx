@@ -21,7 +21,7 @@ const AuctionDetail = () => {
   const [swith, setSwith] = useState(false);
   const [bidHistory, setBidHistory] = useState([]);
   const [currentPrice, setCurrentPrice] = useState(0);
-  const targetDate = convertDate(detailAuction?.endTime, detailAuction?.endDay);
+  // const targetDate = convertDate(detailAuction?.endTime, detailAuction?.endDay);
   const [hours, setHours] = useState<number | ''>('');
   const [minutes, setMinutes] = useState<number | ''>('');
   const { id } = useParams();
@@ -53,7 +53,7 @@ const AuctionDetail = () => {
 
   const handleToInfor = (iduser: string) => {
     // Pass `iduser` as part of the state to the `/inforUser` route
-    navigate("/inforUser", { state: { iduser: iduser, status: true } });
+    navigate('/inforUser', { state: { iduser: iduser, status: true } });
   };
   const handleModalApprove = async () => {
     if (id) {
@@ -73,7 +73,7 @@ const AuctionDetail = () => {
   };
   const handleModalReject = async () => {
     if (id) {
-      const response = await approveAuction(Number(id), false, price, "00:00");
+      const response = await approveAuction(Number(id), false, price, '00:00');
       if (response.isSucceed) {
         fetchDetailAuction();
         alert('Bạn đã từ chối với đơn hàng đấu giá này');
@@ -95,7 +95,7 @@ const AuctionDetail = () => {
     setSwith(false); // Close cancel modal
   };
   useEffect(() => {
-    const socket = new WebSocket(`ws://capstoneauctioneer.runasp.net/api/viewBidHistory?id=${1}`);
+    const socket = new WebSocket(`ws://capstoneauctioneer.runasp.net/api/viewBidHistory?id=${id}`);
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -109,6 +109,8 @@ const AuctionDetail = () => {
   }, [id]);
   const fetchDetailAuction = async () => {
     try {
+      console.log('id', id);
+
       const response = await getDetailAuctionAdmin(Number(id)); // Sử dụng id từ props
       console.log(response, 'data');
       if (response?.isSucceed) {
@@ -144,38 +146,112 @@ const AuctionDetail = () => {
   if (error) {
     return <Typography color="error">{error}</Typography>; // Hiển thị lỗi nếu có
   }
-  const calculateNewEndTime = (endTime: string, timePerLap: string): string => {
+  const calculateNewTargetDate = (endTime: string, endDay: string, timePerLap: string): Date => {
+    if (!endTime || !endDay || !timePerLap) {
+      console.warn('Missing required parameters for calculateNewTargetDate:', {
+        endTime,
+        endDay,
+        timePerLap,
+      });
+      return new Date(); // Trả về thời gian hiện tại nếu thiếu tham số
+    }
+
+    try {
+      // Sử dụng convertDate để tạo đối tượng ngày ban đầu
+      const endDate = convertDate(endTime, endDay);
+      const now = new Date();
+
+      // Tách giờ và phút từ TimePerLap
+      const [hours, minutes] = timePerLap.split(':').map(Number);
+
+      if (endDate < now) {
+        // Nếu endDate đã qua, cộng thêm giờ và phút từ TimePerLap
+        endDate.setHours(endDate.getHours() + hours);
+        endDate.setMinutes(endDate.getMinutes() + minutes);
+      }
+
+      return endDate; // Trả về đối tượng Date
+    } catch (error) {
+      console.error('Error in calculateNewTargetDate:', { endTime, endDay, timePerLap, error });
+      return new Date(); // Trả về giá trị mặc định trong trường hợp lỗi
+    }
+  };
+  const targetDate = calculateNewTargetDate(
+    detailAuction?.endTime,
+    detailAuction?.endDay,
+    detailAuction?.timePerLap
+  );
+  const calculateFinalTime = (endTime: string, endDay: string): Date => {
+    const [endHours, endMinutes] = endTime.split(':').map(Number); // Tách giờ và phút từ endTime
+
+    // Chuyển đổi định dạng dd/MM/yyyy thành yyyy-MM-dd
+    const [day, month, year] = endDay.split('/');
+    const isoDate = `${year}-${month}-${day}`; // Định dạng yyyy-MM-dd
+
+    const endDate = new Date(isoDate); // Tạo đối tượng Date từ định dạng ISO
+
+    endDate.setHours(endHours, endMinutes, 0, 0); // Gán giờ và phút từ endTime
+
+    return endDate; // Trả về đối tượng Date đã được tính toán
+  };
+  const isEndTimePassed = (endTime: string = '', endDay: string = ''): boolean => {
+    const finalTime = calculateFinalTime(endTime, endDay);
+
+    return finalTime <= new Date(); // Kiểm tra nếu thời gian cuối đã qua
+  };
+  const calculateNewEndTime = (
+    endTime: string | undefined,
+    timePerLap: string | undefined
+  ): string | null => {
+    // Kiểm tra nếu endTime hoặc timePerLap không hợp lệ
+    if (!endTime || !timePerLap) {
+      console.error('endTime hoặc timePerLap không hợp lệ');
+      return null; // Hoặc giá trị mặc định phù hợp
+    }
+
     // Tách giờ và phút từ endTime
     const [endHours, endMinutes] = endTime.split(':').map(Number);
     // Tách giờ và phút từ timePerLap
     const [lapHours, lapMinutes] = timePerLap.split(':').map(Number);
-    
+
     // Tạo đối tượng Date với giờ và phút từ endTime
     const endDate = new Date();
     endDate.setHours(endHours);
     endDate.setMinutes(endMinutes);
-  
+
     // Cộng thêm giờ và phút từ timePerLap
     endDate.setHours(endDate.getHours() + lapHours);
     endDate.setMinutes(endDate.getMinutes() + lapMinutes);
-  
+
     // Lấy giờ và phút sau khi cộng thêm
     const newHours = endDate.getHours().toString().padStart(2, '0');
     const newMinutes = endDate.getMinutes().toString().padStart(2, '0');
-  
+
     // Trả về chuỗi thời gian mới
     return `${newHours}:${newMinutes}`;
   };
   const auctionInfo = [
     {
       label: 'Chủ thầu',
-      value: <div onClick={() => handleToInfor(detailAuction.user.accountId)}>{detailAuction.user.fullName}</div>,
+      value: (
+        <div onClick={() => handleToInfor(detailAuction.user.accountId)}>
+          {detailAuction.user.fullName}
+        </div>
+      ),
     },
     {
       label: 'Người trúng thầu',
-      value: detailAuction.winBidder == null
-        ? 'Chưa có người trúng thầu'
-        : <div className='cursor-pointer' onClick={() => handleToInfor(detailAuction.winBidder.accountId)}>{detailAuction.winBidder.nameUser}</div>,
+      value:
+        detailAuction.winBidder == null ? (
+          'Chưa có người trúng thầu'
+        ) : (
+          <div
+            className="cursor-pointer"
+            onClick={() => handleToInfor(detailAuction.winBidder.accountId)}
+          >
+            {detailAuction.winBidder.nameUser}
+          </div>
+        ),
     },
     {
       label: 'Quản lý',
@@ -192,12 +268,15 @@ const AuctionDetail = () => {
     },
     {
       label: 'Bước giá',
-      value: `${detailAuction.priceStep
-        .toLocaleString('vi-VN', {
-          style: 'currency',
-          currency: 'VND',
-        })
-        .replace('₫', 'VNĐ')}`,
+      value: `${
+        detailAuction.priceStep ??
+        (0)
+          .toLocaleString('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+          })
+          .replace('₫', 'VNĐ')
+      }`,
     },
     {
       label: 'Tiền đặt trước',
@@ -242,7 +321,17 @@ const AuctionDetail = () => {
             <div className="container flex flex-col gap-2 h-full">
               <div className="flex gap-1">
                 <div className="font-bold line-clamp-2">{detailAuction?.nameAuction}</div>
-                <CountdownTimer targetDate={targetDate} />
+                <div
+                  className={`${
+                    !isEndTimePassed(detailAuction.endTime, detailAuction.endDay)
+                      ? 'bg-green-500'
+                      : targetDate > new Date()
+                        ? 'bg-orange-500'
+                        : 'bg-yellow-500'
+                  } bg-opacity-90 p-2 rounded-full w-60`}
+                >
+                  <CountdownTimer targetDate={targetDate} />
+                </div>
               </div>
 
               <div className="h-[2px] w-full bg-gray-200"></div>
@@ -266,7 +355,8 @@ const AuctionDetail = () => {
                                 <p>{new Intl.NumberFormat('vi-VN').format(bid.Price)} VND</p>
                                 <span>{bid.DateAndTime}</span>
                               </div>
-                              <div onClick={() => handleToInfor(bid.userId)}><SearchIcon/>
+                              <div onClick={() => handleToInfor(bid.userId)}>
+                                <SearchIcon />
                               </div>
                             </div>
                             <div className="h-[2px] w-full bg-gray-200"></div>
@@ -339,7 +429,7 @@ const AuctionDetail = () => {
             {detailAuction.nameAuction}
           </Typography>
           <Typography className="px-4" variant="h6" component="h2" fontWeight="bold">
-            Mô tả: 
+            Mô tả:
           </Typography>
           <Typography className="px-4" fontWeight="bold">
             - {detailAuction.description}
@@ -375,13 +465,13 @@ const AuctionDetail = () => {
         </Box>
       </Box>
       <ApproveModal
-          open={isApproveModalOpen}
-          onClose={handleModalClose}
-          setPrice={setPrice}
-          onConfirm={handleModalApprove} // Ensure this is correct
-          setHours={setHours}
-          setMinutes={setMinutes}
-        />
+        open={isApproveModalOpen}
+        onClose={handleModalClose}
+        setPrice={setPrice}
+        onConfirm={handleModalApprove} // Ensure this is correct
+        setHours={setHours}
+        setMinutes={setMinutes}
+      />
       <CancelModal
         open={isApproveModalCancelOpen} // Use the correct state for the cancel modal
         onClose={handleModalCancelClose}

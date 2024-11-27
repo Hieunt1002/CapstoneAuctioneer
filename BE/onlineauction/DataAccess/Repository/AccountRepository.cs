@@ -12,11 +12,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection.Emit;
 using System.Reflection.Metadata;
 using System.Security.Claims;
+using System.Security.Cryptography.Xml;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
@@ -54,6 +57,8 @@ namespace DataAccess.Repository
         /// </summary>
         private readonly IUploadRepository _uploadRepository;
 
+        private readonly DigitalSignatureHelper _signatureHelper;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AccountRepository"/> class.
         /// </summary>
@@ -69,6 +74,7 @@ namespace DataAccess.Repository
             RoleManager<IdentityRole> roleManager,
             IUploadRepository uploadRepository,
             IUploadRepository upload,
+            DigitalSignatureHelper signatureHelper,
             IConfiguration configuration)
         {
             _context = context;
@@ -77,6 +83,7 @@ namespace DataAccess.Repository
             _configuration = configuration;
             _uploadRepository = uploadRepository;
             _upload = upload;
+            _signatureHelper = signatureHelper;
         }
 
         /// <summary>
@@ -212,7 +219,7 @@ namespace DataAccess.Repository
 
             var createAccountDetail = new AccountDetail
             {
-                AccountID = createAccount.Id,
+                AccountID = createAccount.Id
             };
 
             var createAccountDetailResult = await AccountDAO.Instance.AddAccountDetailAsync(createAccountDetail);
@@ -282,6 +289,7 @@ namespace DataAccess.Repository
             }
 
             accountDetail = await AccountDAO.Instance.ProfileDAO(account.Id);
+            var signature = await AccountDAO.Instance.getSignature(account.Id);
             if (accountDetail == null)
             {
                 return new ResponseDTO { IsSucceed = false, Message = "Account details not found" };
@@ -293,6 +301,7 @@ namespace DataAccess.Repository
                 Avatar = accountDetail.Avatar,
                 FrontCCCD = accountDetail.FrontCCCD,
                 BacksideCCCD = accountDetail.BacksideCCCD,
+                signature = signature != null ? signature.SignatureImg : "",
                 Email = account.Email,
                 FullName = accountDetail.FullName,
                 Phone = accountDetail.Phone,
@@ -460,7 +469,30 @@ namespace DataAccess.Repository
             {
                 return new ResponseDTO { IsSucceed = false, Message = "Account not found" };
             }
+            var keys = _signatureHelper.GenerateKeys();
+            if (uProfileDTO.signature == null || uProfileDTO.signature.Length == 0)
+            {
+                return new ResponseDTO { IsSucceed = false, Message = "Hình ảnh chữ ký không được để trống." };
+            }
+            string base64SignatureImage;
 
+            using (var memoryStream = new MemoryStream())
+            {
+                await uProfileDTO.signature.CopyToAsync(memoryStream);
+                byte[] imageBytes = memoryStream.ToArray();
+                base64SignatureImage = Convert.ToBase64String(imageBytes);
+            }
+            var signature = _signatureHelper.SignData(base64SignatureImage, keys.privateKey);
+            var fileAttach = new DigitalSignature
+            {
+                AccountID = userID,
+                Base64SignatureImage = base64SignatureImage,
+                SignatureImg = await _upload.SaveFileAsync(uProfileDTO.signature, "DigitalSignature", userID),
+                Signature = signature,
+                PublicKey = keys.publicKey,
+                PrivateKey = keys.privateKey,
+                CreatedAt = DateTime.Now,
+            };
             var accountDetail = new AccountDetail
             {
                 AccountID = userID,
@@ -482,6 +514,7 @@ namespace DataAccess.Repository
 
             try
             {
+                await FileAttachmentsDAO.Instance.AddFileAttachment(fileAttach);
                 await AccountDAO.Instance.UpdateAccountDetail(accountDetail);
                 return new ResponseDTO { IsSucceed = true, Message = "Profile updated successfully" };
             }

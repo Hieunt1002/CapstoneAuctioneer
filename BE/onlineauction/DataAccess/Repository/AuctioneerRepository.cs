@@ -147,15 +147,10 @@ namespace DataAccess.Repository
             {
                 auction = result.Where(ad =>
                     !string.IsNullOrEmpty(ad.StartDay) &&
-                    DateTime.ParseExact(ad.StartDay, "dd/MM/yyyy", null) < DateTime.Today ||
+                    DateTime.ParseExact(ad.StartDay, "dd/MM/yyyy", null) > DateTime.Today ||
                     (!string.IsNullOrEmpty(ad.StartDay) && !string.IsNullOrEmpty(ad.StartTime) &&
                     DateTime.ParseExact(ad.StartDay, "dd/MM/yyyy", null) == DateTime.Today &&
-                    TimeSpan.Parse(ad.StartTime) <= DateTime.Now.TimeOfDay) &&
-                    !string.IsNullOrEmpty(ad.EndDay) &&
-                    (DateTime.ParseExact(ad.EndDay, "dd/MM/yyyy", null) > DateTime.Today ||
-                    (!string.IsNullOrEmpty(ad.EndTime) &&
-                    DateTime.ParseExact(ad.EndDay, "dd/MM/yyyy", null) == DateTime.Today &&
-                    TimeSpan.Parse(ad.EndTime) >= DateTime.Now.TimeOfDay))).ToList();
+                    TimeSpan.Parse(ad.StartTime) >= DateTime.Now.TimeOfDay)).ToList();
             }
             else if (status == 3)
             {

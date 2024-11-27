@@ -23,13 +23,14 @@ namespace DataAccess.Service
         public void CreateAuction(int id, DateTime endTime)
         {
             Console.WriteLine($"{id} đã được tạo và sẽ kết thúc vào {endTime}.");
-            DateTime notificationTime = endTime.AddMinutes(15);
+            DateTime notificationTime = endTime.AddMinutes(2);
             TimeSpan delay = notificationTime - DateTime.Now;
 
             // Kiểm tra xem delay có nhỏ hơn 0 không, nếu có thì không tạo job
             if (delay.TotalMilliseconds > 0)
             {
                 BackgroundJob.Schedule(() => NotifyAuctionComplete(id), delay);
+                Console.WriteLine($"{id} đã được tạo và sẽ kết thúc vào {delay}.");
             }
             else
             {
@@ -85,8 +86,6 @@ namespace DataAccess.Service
                 // Kiểm tra BidderEmail
                 if (result.BidderEmail != null)
                 {
-                    
-
                     // Thông báo cho người không thanh toán
                     var notifications = new Notification
                     {
@@ -111,6 +110,7 @@ namespace DataAccess.Service
                         Description = $"Người trúng thầu không trả tiền đúng hẹn nên sản phẩm đấu giá không thành công"
                     };
                     await NotificationDAO.Instance.AddNotification(auctioneerNotification);
+                    CreateAuction(id, DateTime.Now);
                 }
                 else
                 {
@@ -154,7 +154,6 @@ namespace DataAccess.Service
                 }
             }
         }
-
 
         /// <summary>
         /// Notifies the auction complete.
@@ -245,7 +244,7 @@ namespace DataAccess.Service
                         };
                         await NotificationDAO.Instance.AddNotification(auctioneerNotification);
 
-                        CreateAuction(RAID, DateTime.Now.AddDays(2), result.endTime, result.AccountId);
+                        CreateAuction(RAID, DateTime.Now.AddDays(1), result.endTime, result.AccountId);
                     }
                 }
                 else

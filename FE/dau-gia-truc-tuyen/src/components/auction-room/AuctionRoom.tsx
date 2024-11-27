@@ -9,6 +9,7 @@ import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import { getAuctionRoomDetail, postBidMoney } from '../../queries/AuctionAPI';
 import CountDownTimeForRoom from '@common/coutdown-timer/CountDownTimeForRoom';
 import useTimeDifference from '@hooks/useTimeDifference';
+import { useParams } from 'react-router-dom';
 
 interface AuctionRoomProps {
   auctionDetailInfor: AuctionDetails | null;
@@ -44,7 +45,7 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
   const [isTimeOut, setIsTimeOut] = useState(false);
   const [timeRound, setTimeRound] = useState('');
   const [bidStep, setBidStep] = useState(0);
-  const id = 1;
+  const { id } = useParams<{ id: string }>();
 
   // const roomTime = convertToRoomTime({
   //   startDay: roomAuctionDetails?.startDay || '',
@@ -73,7 +74,7 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
   
   useEffect(() => {
     const fetchAuctionRoomDetails = async () => {
-      const response = await getAuctionRoomDetail(id); // Call API function
+      const response = await getAuctionRoomDetail(Number(id)); // Call API function
       if (response?.isSucceed) {
         setRoomAuctionDetails(response?.result || null); // Ensure result is an object or null
         setTimeRound(response?.result?.timeRound);
@@ -157,7 +158,7 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
   };
 
   const formatMoney = (int: number) => {
-    return new Intl.NumberFormat('vi-VN').format(int);
+    return new Intl.NumberFormat('vi-VN').format(int ?? 0);
   };
 
   const calculateResult = () => {
@@ -170,7 +171,7 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
   }, [inputValue, stepValue]);
 
   const calculateTotal = () => {
-    const total = currentPrice + (stepValue || 0) * inputValue; // Calculate total price
+    const total = currentPrice ?? 0 + (stepValue || 0) * inputValue; // Calculate total price
     return new Intl.NumberFormat('vi-VN').format(total); // Format total to Vietnamese style
   };
 
@@ -236,11 +237,11 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
               readOnly: true, // Set to readOnly if you don't want this input to be editable
             }}
           />
-          X
+          *
           <div className="flex items-center border border-gray-300 p-1 rounded-lg">
             <Grid item>
               <Box className="flex items-center p-1">
-                <IconButton
+              <IconButton
                   size="small"
                   sx={{
                     borderRadius: '50%',
@@ -249,9 +250,9 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
                       backgroundColor: 'primary.dark',
                     },
                   }}
-                  onClick={incrementValue}
+                  onClick={decrementValue}
                 >
-                  <AddIcon sx={{ color: 'white', width: '12px', height: '12px' }} />
+                  <RemoveIcon sx={{ color: 'white', width: '12px', height: '12px' }} />
                 </IconButton>
                 <TextField
                   value={inputValue}
@@ -282,9 +283,9 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
                       backgroundColor: 'primary.dark',
                     },
                   }}
-                  onClick={decrementValue}
+                  onClick={incrementValue}
                 >
-                  <RemoveIcon sx={{ color: 'white', width: '12px', height: '12px' }} />
+                  <AddIcon sx={{ color: 'white', width: '12px', height: '12px' }} />
                 </IconButton>
               </Box>
             </Grid>

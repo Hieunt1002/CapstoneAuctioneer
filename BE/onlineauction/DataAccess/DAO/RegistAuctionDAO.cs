@@ -111,12 +111,16 @@ namespace DataAccess.DAO
                                                 EndTime = ad.EndTime,
                                                 PriceStart = a.StartingPrice,
                                                 winningBid = context.Bets
-                                                                                    .Where(b => b.RAID == r.RAID)
-                                                                                    .OrderByDescending(b => b.PriceBit)
-                                                                                    .Select(b => b.PriceBit) // Get the highest bid price
-                                                                                    .FirstOrDefault(),
+                                                .Join(context.RegistAuctioneers,
+                                                      b => b.RAID,
+                                                      r => r.RAID,
+                                                      (b, r) => new { b.PriceBit, r.ListAuctionID })
+                                                .Where(br => br.ListAuctionID == a.ListAuctionID)
+                                                .OrderByDescending(br => br.PriceBit)
+                                                .Select(br => br.PriceBit)
+                                                .FirstOrDefault(),
                                                 status = r.AuctionStatus == true ? "chúc mừng" : "Chia buồn",
-                                            }).ToListAsync();
+                                            }).Distinct().ToListAsync();
 
 
                 return auctioneerList;
@@ -232,7 +236,7 @@ namespace DataAccess.DAO
                                            AuctionDetail = ad,
                                            ListAuction = a
                                        }).FirstOrDefaultAsync();
-                    if (bet.BetID != 0)
+                    if (bet.PlacingABidID != 0)
                     {
                         // Existing bet found, so update it
                         bet.PriceBit = check.ListAuction.StartingPrice + price;
@@ -361,7 +365,7 @@ namespace DataAccess.DAO
                                 where r.ListAuctionID == id
                                 select new ViewBidHistoryDTO
                                 {
-                                    ID = b.BetID,
+                                    ID = b.PlacingABidID,
                                     userId = r.AccountID,
                                     Price = b.PriceBit,
                                     DateAndTime = b.BidTime
@@ -570,6 +574,12 @@ namespace DataAccess.DAO
                         context.Entry(account).State = EntityState.Modified;
                         query.AuctionStatus = false;
                         context.Entry(query).State = EntityState.Modified;
+                        var search = context.Bets.Where(a => a.RAID == id).ToList();
+                        foreach(var item in search)
+                        {
+                            var plac = context.Bets.FirstOrDefault(a => a.PlacingABidID== item.PlacingABidID);
+                            context.Bets.Remove(plac);
+                        }
                         await context.SaveChangesAsync();
                         if (account.Warning >= 3)
                         {

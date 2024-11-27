@@ -31,7 +31,7 @@ const HomePage = () => {
 
             <div className="bg-white">
               <div className=" max-w-1440px mt-28 ml-auto mr-auto">
-                <PropertiesList searchResults={searchResults} isSearch={isSearch} />
+                <PropertiesList searchResults={searchResults} isSearch={isSearch} setIsSearch={setIsSearch} />
               </div>
             </div>
             <div className="bg-lightGray">

@@ -11,7 +11,7 @@ const SuccessPage = () => {
     const [isFetch, setIsFetch] = useState(true);
   
     const handleReturnHome = () => {
-      navigate('/');
+      navigate('/', {state : {data: '4'}});
     };
   
     useEffect(() => {

@@ -135,7 +135,7 @@ namespace DataAccess.DAO
                                                                 join ad in context.AuctionDetails on a.ListAuctionID equals ad.ListAuctionID
                                                                 join r in context.RegistAuctioneers on a.ListAuctionID equals r.ListAuctionID into adGroup
                                                                 from rg in adGroup.DefaultIfEmpty()
-                                                                where a.StatusAuction == true && (string.IsNullOrEmpty(uid) || a.Creator != uid)
+                                                                where a.StatusAuction == true && (a.Creator != uid || 1 == 1)
                                                                 select new ListAuctioneerDTO
                                                                 {
                                                                     Id = a.ListAuctionID,
@@ -148,10 +148,14 @@ namespace DataAccess.DAO
                                                                     EndTime = ad.EndTime ?? null,
                                                                     PriceStart = a.StartingPrice,
                                                                     winningBid = context.Bets
-                                                                                .Where(b => b.RAID == rg.RAID)
-                                                                                .OrderByDescending(b => b.PriceBit)
-                                                                                .Select(b => b.PriceBit) // Get the highest bid price
-                                                                                .FirstOrDefault(),
+                                                                    .Join(context.RegistAuctioneers,
+                                                                          b => b.RAID,
+                                                                          r => r.RAID,
+                                                                          (b, r) => new { b.PriceBit, r.ListAuctionID })
+                                                                    .Where(br => br.ListAuctionID == a.ListAuctionID)
+                                                                    .OrderByDescending(br => br.PriceBit)
+                                                                    .Select(br => br.PriceBit)
+                                                                    .FirstOrDefault(),
                                                                 }).Distinct().OrderByDescending(o => o.Id).ToListAsync();
                 return auctioneerList;
             }
@@ -184,10 +188,14 @@ namespace DataAccess.DAO
                                                 EndTime = ad.EndTime,
                                                 PriceStart = a.StartingPrice,
                                                 winningBid = context.Bets
-                                                                                    .Where(b => b.RAID == rg.RAID)
-                                                                                    .OrderByDescending(b => b.PriceBit)
-                                                                                    .Select(b => b.PriceBit) // Get the highest bid price
-                                                                                    .FirstOrDefault(),
+                                                .Join(context.RegistAuctioneers,
+                                                      b => b.RAID,
+                                                      r => r.RAID,
+                                                      (b, r) => new { b.PriceBit, r.ListAuctionID })
+                                                .Where(br => br.ListAuctionID == a.ListAuctionID)
+                                                .OrderByDescending(br => br.PriceBit)
+                                                .Select(br => br.PriceBit)
+                                                .FirstOrDefault(),
                                             }).Distinct().OrderByDescending(o => o.Id).ToListAsync();
 
                 return auctioneerList;
@@ -224,10 +232,14 @@ namespace DataAccess.DAO
                                                                         EndTime = ad.EndTime ?? null,
                                                                         PriceStart = a.StartingPrice,
                                                                         winningBid = context.Bets
-                                                                                    .Where(b => b.RAID == rg.RAID)
-                                                                                    .OrderByDescending(b => b.PriceBit)
-                                                                                    .Select(b => b.PriceBit) // Get the highest bid price
-                                                                                    .FirstOrDefault(),
+                                                                        .Join(context.RegistAuctioneers,
+                                                                              b => b.RAID,
+                                                                              r => r.RAID,
+                                                                              (b, r) => new { b.PriceBit, r.ListAuctionID })
+                                                                        .Where(br => br.ListAuctionID == a.ListAuctionID)
+                                                                        .OrderByDescending(br => br.PriceBit)
+                                                                        .Select(br => br.PriceBit)
+                                                                        .FirstOrDefault(),
                                                                     }).OrderByDescending(o => o.Id).ToListAsync();
                     return auctioneerList;
                 }
@@ -270,10 +282,10 @@ namespace DataAccess.DAO
 
                     var auctioneerList = await (from a in context.ListAuctions
                                                 join ad in context.AuctionDetails on a.ListAuctionID equals ad.ListAuctionID
+                                                join ds in context.FileAttachments on a.Creator equals ds.AccountID
                                                 join us in context.Accounts on a.Creator equals us.Id
                                                 join ct in context.Categorys on ad.CategoryID equals ct.CategoryID
-                                                join ds in context.FileAttachments on ad.ListAuctionID equals ds.ListAuctionID
-                                                join i in context.TImages on ds.FileAID equals i.FileAID
+                                                join i in context.TImages on ad.ListAuctionID equals i.ListAuctionID
                                                 join ud in context.AccountDetails on us.Id equals ud.AccountID
                                                 join m in context.AccountDetails on a.Manager equals m.AccountID into adGroup
                                                 from m in adGroup.DefaultIfEmpty() // Sử dụng LEFT JOIN
@@ -434,8 +446,7 @@ namespace DataAccess.DAO
                         .FirstOrDefaultAsync(ad => ad.ListAuctionID == auctioneer.auctionID);
                     var auctionDetail = await context.AuctionDetails
                         .FirstOrDefaultAsync(ad => ad.ListAuctionID == auctioneer.auctionID);
-                    var file = await context.FileAttachments.FirstOrDefaultAsync(a => a.ListAuctionID == existingAuctioneer.ListAuctionID);
-                    var img = await context.TImages.FirstOrDefaultAsync(a => a.FileAID == file.FileAID);
+                    var img = await context.TImages.FirstOrDefaultAsync(a => a.ListAuctionID == auctionDetail.ListAuctionID);
 
                     if (existingAuctioneer == null || auctionDetail == null)
                     {
@@ -523,21 +534,6 @@ namespace DataAccess.DAO
                     var ad = await context.AuctionDetails.FirstOrDefaultAsync(a => a.ListAuctionID == id);
                     if (ad != null)
                     {
-                        // File Attachments
-                        var file = await context.FileAttachments.Where(a => a.ListAuctionID == id).ToListAsync();
-                        if (file.Any())
-                        {
-                            foreach (var item in file)
-                            {
-                                // Images related to FileAttachment
-                                var img = await context.TImages.Where(i => i.FileAID == item.FileAID).ToListAsync();
-                                if (img.Any())
-                                {
-                                    context.TImages.RemoveRange(img); // Remove images in bulk
-                                }
-                                context.FileAttachments.Remove(item); // Remove the file attachment
-                            }
-                        }
                         context.AuctionDetails.Remove(ad); // Remove AuctionDetail
                     }
 
@@ -595,9 +591,9 @@ namespace DataAccess.DAO
                     if (autioneer.Status == true)
                     {
                         existingAutioneerDetail.StartDay = DateTime.Now.AddDays(2).ToString("dd/MM/yyyy");
-                        existingAutioneerDetail.EndDay = DateTime.Now.AddDays(1).ToString("dd/MM/yyyy");
+                        existingAutioneerDetail.EndDay = DateTime.Now.AddDays(3).ToString("dd/MM/yyyy");
                         existingAutioneerDetail.StartTime = DateTime.Now.AddDays(2).ToString("HH:mm");
-                        existingAutioneerDetail.EndTime = DateTime.Now.AddDays(1).ToString("HH:mm");
+                        existingAutioneerDetail.EndTime = DateTime.Now.AddDays(3).ToString("HH:mm");
                     }
                     existingAutioneer.StatusAuction = autioneer.Status;
                     existingAutioneer.Manager = idManager;
@@ -657,6 +653,7 @@ namespace DataAccess.DAO
                                     StartingPrice = a.StartingPrice,
                                     StartDay = ad.StartDay,
                                     StartTime = ad.StartTime,
+                                    TimePerLap= ad.TimePerLap,
                                     EndDay = ad.EndDay,
                                     EndTime = ad.EndTime,
                                     StatusAuction = a.StatusAuction == null ? "Not approved yet"
@@ -839,8 +836,8 @@ namespace DataAccess.DAO
                     var result = await (from a in context.ListAuctions
                                         join ad in context.AuctionDetails on a.ListAuctionID equals ad.ListAuctionID
                                         join c in context.Categorys on ad.CategoryID equals c.CategoryID
-                                        join d in context.FileAttachments on a.ListAuctionID equals d.ListAuctionID
-                                        join i in context.TImages on d.FileAID equals i.FileAID
+                                        //join d in context.FileAttachments on a.ListAuctionID equals d.ListAuctionID
+                                        join i in context.TImages on a.ListAuctionID equals i.ListAuctionID
                                         join m in context.AccountDetails
                                         on a.Manager equals m.AccountID into adGroup
                                         from m in adGroup.DefaultIfEmpty()
@@ -1201,7 +1198,7 @@ namespace DataAccess.DAO
                                        join rd in context.RegistAuctioneers on a.ListAuctionID equals rd.ListAuctionID into rGroup
                                        from r in rGroup.DefaultIfEmpty() // left join
                                        join u in context.Accounts on r.AccountID equals u.Id into userGroup // sử dụng into để tạo nhóm
-                                       from u in userGroup.DefaultIfEmpty() // left join
+                                       from ud in userGroup.DefaultIfEmpty() // left join
                                        join adm in context.Accounts on a.Manager equals adm.Id
                                        join c in context.Accounts on a.Creator equals c.Id
                                        where a.ListAuctionID == Convert.ToInt32(id)
@@ -1218,13 +1215,14 @@ namespace DataAccess.DAO
                                                           orderby b.PriceBit descending
                                                           select acc.Email).FirstOrDefault(),
 
-                                           endTime = ConvertToDateTime(ad.EndDay, ad.EndTime),
-
+                                           //endTime = ConvertToDateTime(ad.EndDay, ad.EndTime),
+                                           endTime = ad.EndTime,
+                                           endDay = ad.EndDay,
                                            // Lấy giá đấu cao nhất
                                            Price = r.RAID != null ? (from b in context.Bets
                                                                      where b.RAID == r.RAID
                                                                      select b.PriceBit).OrderByDescending(x => x).FirstOrDefault() : 0,
-                                           Account = u,
+                                           Account = ud,
                                            Title = a,
                                            Admin = adm,
                                            Auction = c
@@ -1237,9 +1235,9 @@ namespace DataAccess.DAO
                             EmailAdmin = query.EmailAdmin,
                             AuctioneerEmail = query.AuctioneerEmail,
                             BidderEmail = query.BidderEmail,
-                            endTime = query.endTime,
+                            endTime = ConvertToDateTime(query.endDay, query.endTime),
                             Price = query.Price,
-                            AccountId = query.Account.Id,
+                            AccountId = query.Account?.Id,
                             Title = query.Title.NameAuction,
                             AccountAdminId = query.Admin.Id,
                             AccountAuctionId = query.Auction.Id,
@@ -1289,7 +1287,8 @@ namespace DataAccess.DAO
         {
             string combinedDateTime = $"{endDay} {endTime}";
 
-            if (DateTime.TryParseExact(combinedDateTime, "yyyy-MM-dd HH:mm:ss",
+            // Sử dụng định dạng phù hợp cho ngày và giờ
+            if (DateTime.TryParseExact(combinedDateTime, "dd/MM/yyyy HH:mm",
                                         System.Globalization.CultureInfo.InvariantCulture,
                                         System.Globalization.DateTimeStyles.None, out DateTime endDateTime))
             {
