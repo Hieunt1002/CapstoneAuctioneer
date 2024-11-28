@@ -85,5 +85,6 @@ namespace DataAccess.IRepository
         Task<InforPayMentDTO> TotalPayDeposit(int acutionId, string uid);
 
         Task<ResponseDTO> UpdatePayment(int id, string status);
+        Task<ResponseDTO> SearchListYourAuctioneer(string id, int status, string content);
     }
 }

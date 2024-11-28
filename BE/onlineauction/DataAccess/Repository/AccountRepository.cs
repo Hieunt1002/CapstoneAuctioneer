@@ -91,7 +91,7 @@ namespace DataAccess.Repository
         /// </summary>
         /// <param name="loginDTO">The login dto.</param>
         /// <returns></returns>
-        public async Task<ResponseDTO> LoginAsync(Login loginDTO)
+        public async Task<ResponseDTO> LoginAsync(Login loginDTO, bool google = false)
         {
             Account account = null;
 
@@ -103,10 +103,12 @@ namespace DataAccess.Repository
             {
                 account = await _accountManager.FindByNameAsync(loginDTO.username);
             }
-
-            if (account == null || !await _accountManager.CheckPasswordAsync(account, loginDTO.password))
+            if (!google)
             {
-                return new ResponseDTO() { IsSucceed = false, Message = "Invalid credentials" };
+                if (account == null || !await _accountManager.CheckPasswordAsync(account, loginDTO.password))
+                {
+                    return new ResponseDTO() { IsSucceed = false, Message = "Invalid credentials" };
+                }
             }
             if (account.Status == true && account.EmailConfirmed != false)
             {
@@ -161,7 +163,7 @@ namespace DataAccess.Repository
 
         public string GenerateJwtToken(string email, string role)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])); // Key từ appsettings
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"])); // Key từ appsettings
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             // Thêm claims, bao gồm role
@@ -174,8 +176,8 @@ namespace DataAccess.Repository
 
             // Tạo token
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                issuer: _configuration["JWT:ValidIssuer"],
+                audience: _configuration["JWT:ValidAudience"],
                 claims: claims,
                 expires: DateTime.UtcNow.AddDays(1), // Thời gian hết hạn
                 signingCredentials: credentials);
@@ -240,6 +242,43 @@ namespace DataAccess.Repository
                     return new ResponseDTO() { IsSucceed = false, Message = "Failed to send OTP. Please try again." };
                 }
             }
+            return new ResponseDTO() { IsSucceed = true, Message = "User created successfully" };
+        }
+
+        public async Task<ResponseDTO> CreateGoogle(AddAccountDTO account)
+        {
+            var createAccount = new Account
+            {
+                UserName = account.UserName,
+                Email = account.Email,
+                Warning = 0,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                Status = false,
+                EmailConfirmed = true,
+            };
+
+
+            var createUserResult = await _accountManager.CreateAsync(createAccount, account.Password);
+
+            if (!createUserResult.Succeeded)
+            {
+                var errorString = string.Join(" ", createUserResult.Errors.Select(e => e.Description));
+                return new ResponseDTO() { IsSucceed = false, Message = "User creation failed because: " + errorString };
+            }
+
+            var createAccountDetail = new AccountDetail
+            {
+                AccountID = createAccount.Id
+            };
+
+            var createAccountDetailResult = await AccountDAO.Instance.AddAccountDetailAsync(createAccountDetail);
+
+            if (!createAccountDetailResult)
+            {
+                return new ResponseDTO() { IsSucceed = false, Message = "Account detail creation failed" };
+            }
+
+            await _accountManager.AddToRoleAsync(createAccount, StaticUserRoles.USER);
             return new ResponseDTO() { IsSucceed = true, Message = "User created successfully" };
         }
 
@@ -319,6 +358,16 @@ namespace DataAccess.Repository
                 placeOfResidence = accountDetail.PlaceOfResidence,
             };
             return new ResponseDTO { Result = profileDTO, IsSucceed = true, Message = "Successfully" };
+        }
+
+        public async Task<bool> checkLoginEmail(string email)
+        {
+            var check = await _accountManager.FindByEmailAsync(email);
+            if (check != null)
+            {
+                return true;
+            }
+            return false;
         }
         /// <summary>
         /// Gets the content of the reset password email.

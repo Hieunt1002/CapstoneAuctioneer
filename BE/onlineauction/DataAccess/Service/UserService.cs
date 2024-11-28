@@ -103,6 +103,12 @@ namespace DataAccess.Service
             var result = await _userReponsitory.ListYourAuctioneer(id, status);
             return result;
         }
+
+        public async Task<ResponseDTO> SearchListYourAuctioneer(string id, int status, string content)
+        {
+            var result = await _userReponsitory.SearchListYourAuctioneer(id, status, content);
+            return result;
+        }
         /// <summary>
         /// Lists your autioneer detail.
         /// </summary>

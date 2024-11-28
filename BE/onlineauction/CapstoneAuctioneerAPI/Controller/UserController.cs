@@ -184,6 +184,26 @@ namespace CapstoneAuctioneerAPI.Controller
 
             return Ok(result);
         }
+
+        /// <summary>
+        /// Auctionregistrationlists the specified status.
+        /// </summary>
+        /// <param name="status">The status.</param>
+        /// <returns></returns>
+        [HttpGet]
+        [Authorize(Policy = "USER")]
+        [Route("searchauctionregistrationlist")]
+        public async Task<ActionResult> searchauctionregistrationlist(int category, string content)
+        {
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _userService.SearchListYourAuctioneer(userId, category, content);
+            if (!result.IsSucceed)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
         /// <summary>
         /// Auctionregistrationdetails the specified identifier.
         /// </summary>

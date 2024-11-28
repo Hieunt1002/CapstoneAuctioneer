@@ -206,9 +206,8 @@ namespace DataAccess.DAO
             using (var context = new ConnectDB())
             {
                 var result = await (from r in context.RegistAuctioneers
-                                    join b in context.Bets on r.RAID equals b.RAID
                                     where r.AccountID == userid && r.ListAuctionID == id
-                                    select r.ListAuctionID)
+                                    select r.RAID)
                                 .FirstOrDefaultAsync();  // Get the top 1 record
 
                 return result;

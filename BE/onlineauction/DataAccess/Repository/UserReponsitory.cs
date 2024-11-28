@@ -84,6 +84,24 @@ namespace DataAccess.Repository
 
         }
 
+        public async Task<ResponseDTO> SearchListYourAuctioneer(string id, int status, string content)
+        {
+            try
+            {
+                var result = await AuctionDAO.Instance.SearchListYourAuctioneer(id, status, content);
+                if (result != null)
+                {
+                    return new ResponseDTO { IsSucceed = true, Result = result, Message = "Successfully" };
+                }
+                return new ResponseDTO { IsSucceed = true, Message = "IsEmpty" };
+            }
+            catch
+            {
+                return new ResponseDTO { IsSucceed = false, Message = "Failed" };
+            }
+
+        }
+
         /// <summary>
         /// Lists your autioneer detail.
         /// </summary>

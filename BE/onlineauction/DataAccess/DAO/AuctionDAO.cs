@@ -133,9 +133,9 @@ namespace DataAccess.DAO
             {
                 List<ListAuctioneerDTO> auctioneerList = await (from a in context.ListAuctions
                                                                 join ad in context.AuctionDetails on a.ListAuctionID equals ad.ListAuctionID
-                                                                join r in context.RegistAuctioneers on a.ListAuctionID equals r.ListAuctionID into adGroup
+                                                                join r in context.RegistAuctioneers on a.ListAuctionID equals r.ListAuctionID into adGroup 
                                                                 from rg in adGroup.DefaultIfEmpty()
-                                                                where a.StatusAuction == true && (a.Creator != uid || 1 == 1)
+                                                                where a.StatusAuction == true && a.Creator != uid && (rg == null || rg.AccountID != uid)
                                                                 select new ListAuctioneerDTO
                                                                 {
                                                                     Id = a.ListAuctionID,
@@ -692,6 +692,52 @@ namespace DataAccess.DAO
                 throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
             }
         }
+
+        public async Task<List<AuctionDetailDTO>> SearchListYourAuctioneer(string id, int category, string content)
+        {
+            try
+            {
+                using (var context = new ConnectDB())
+                {
+                    // Base query
+                    var query = from a in context.ListAuctions
+                                join ad in context.AuctionDetails on a.ListAuctionID equals ad.ListAuctionID
+                                join c in context.Categorys on ad.CategoryID equals c.CategoryID
+                                join m in context.AccountDetails on a.Manager equals m.AccountID into adGroup
+                                from m in adGroup.DefaultIfEmpty()
+                                where a.Creator == id && a.NameAuction.Contains(content.ToLower()) && (category != 0 ? ad.CategoryID == category : 1==1)
+                                select new AuctionDetailDTO
+                                {
+                                    ListAuctionID = a.ListAuctionID,
+                                    Category = c.NameCategory,
+                                    Name = a.Manager == null ? "No management yet" : m.FullName,
+                                    Image = a.Image,
+                                    NameAuction = a.NameAuction,
+                                    StartingPrice = a.StartingPrice,
+                                    StartDay = ad.StartDay,
+                                    StartTime = ad.StartTime,
+                                    TimePerLap = ad.TimePerLap,
+                                    EndDay = ad.EndDay,
+                                    EndTime = ad.EndTime,
+                                    StatusAuction = a.StatusAuction == null ? "Not approved yet"
+                                                : a.StatusAuction == false ? "Reject"
+                                                : "Approved"
+                                };
+
+                    // Execute and return result
+                    return await query.OrderByDescending(o => o.ListAuctionID).ToListAsync();
+                }
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new Exception($"An error occurred while retrieving the auctioneer: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
+            }
+        }
+
         public async Task<List<AuctionDetailDTO>> ListAuctioneerByUser(string id, int status)
         {
             try
