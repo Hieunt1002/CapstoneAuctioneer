@@ -12,6 +12,7 @@ using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -133,7 +134,7 @@ namespace DataAccess.DAO
             {
                 List<ListAuctioneerDTO> auctioneerList = await (from a in context.ListAuctions
                                                                 join ad in context.AuctionDetails on a.ListAuctionID equals ad.ListAuctionID
-                                                                join r in context.RegistAuctioneers on a.ListAuctionID equals r.ListAuctionID into adGroup 
+                                                                join r in context.RegistAuctioneers on a.ListAuctionID equals r.ListAuctionID into adGroup
                                                                 from rg in adGroup.DefaultIfEmpty()
                                                                 where a.StatusAuction == true && a.Creator != uid && (rg == null || rg.AccountID != uid)
                                                                 select new ListAuctioneerDTO
@@ -594,10 +595,10 @@ namespace DataAccess.DAO
                         existingAutioneerDetail.EndDay = DateTime.Now.AddDays(3).ToString("dd/MM/yyyy");
                         existingAutioneerDetail.StartTime = DateTime.Now.AddDays(2).ToString("HH:mm");
                         existingAutioneerDetail.EndTime = DateTime.Now.AddDays(3).ToString("HH:mm");
+                        existingAutioneerDetail.PriceStep = existingAutioneer.StartingPrice * 0.1m;
                     }
                     existingAutioneer.StatusAuction = autioneer.Status;
                     existingAutioneer.Manager = idManager;
-                    existingAutioneerDetail.PriceStep = autioneer.PriceStep == null ? 0 : autioneer.PriceStep;
                     existingAutioneerDetail.TimePerLap = autioneer.TimeRoom;
 
                     // Mark entities as modified
@@ -653,7 +654,7 @@ namespace DataAccess.DAO
                                     StartingPrice = a.StartingPrice,
                                     StartDay = ad.StartDay,
                                     StartTime = ad.StartTime,
-                                    TimePerLap= ad.TimePerLap,
+                                    TimePerLap = ad.TimePerLap,
                                     EndDay = ad.EndDay,
                                     EndTime = ad.EndTime,
                                     StatusAuction = a.StatusAuction == null ? "Not approved yet"
@@ -705,7 +706,7 @@ namespace DataAccess.DAO
                                 join c in context.Categorys on ad.CategoryID equals c.CategoryID
                                 join m in context.AccountDetails on a.Manager equals m.AccountID into adGroup
                                 from m in adGroup.DefaultIfEmpty()
-                                where a.Creator == id && a.NameAuction.Contains(content.ToLower()) && (category != 0 ? ad.CategoryID == category : 1==1)
+                                where a.Creator == id && a.NameAuction.Contains(content.ToLower()) && (category != 0 ? ad.CategoryID == category : 1 == 1)
                                 select new AuctionDetailDTO
                                 {
                                     ListAuctionID = a.ListAuctionID,
@@ -1062,7 +1063,10 @@ namespace DataAccess.DAO
                                 join ad in context.AuctionDetails on a.ListAuctionID equals ad.ListAuctionID
                                 join c in context.Categorys on ad.CategoryID equals c.CategoryID
                                 join u in context.AccountDetails on a.Creator equals u.AccountID
-                                where a.Manager == id || a.Manager == null
+                                join ac in context.AccountDetails on a.Manager equals ac.AccountID into acGroup
+                                from acd in acGroup.DefaultIfEmpty()
+                                where (a.Manager == id && (acd.CategoryId == null || acd.CategoryId == ad.CategoryID))
+                                || a.Manager == null
                                 select new AuctionDetailDTO
                                 {
                                     ListAuctionID = a.ListAuctionID,
@@ -1260,8 +1264,6 @@ namespace DataAccess.DAO
                                                           where ra.ListAuctionID == a.ListAuctionID
                                                           orderby b.PriceBit descending
                                                           select acc.Email).FirstOrDefault(),
-
-                                           //endTime = ConvertToDateTime(ad.EndDay, ad.EndTime),
                                            endTime = ad.EndTime,
                                            endDay = ad.EndDay,
                                            // Lấy giá đấu cao nhất
@@ -1271,6 +1273,7 @@ namespace DataAccess.DAO
                                            Account = ud,
                                            Title = a,
                                            Admin = adm,
+                                           RAID = r.RAID,
                                            Auction = c
                                        }).FirstOrDefaultAsync();
 
@@ -1287,6 +1290,7 @@ namespace DataAccess.DAO
                             Title = query.Title.NameAuction,
                             AccountAdminId = query.Admin.Id,
                             AccountAuctionId = query.Auction.Id,
+                            RAID = query.RAID,
                         };
                     }
 
@@ -1434,5 +1438,42 @@ namespace DataAccess.DAO
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<List<(string Day, int Count)>> Productstatistics()
+        {
+            using (var context = new ConnectDB())
+            {
+                var startOfWeek = StartOfWeek(DayOfWeek.Monday);
+                var endOfWeek = startOfWeek.AddDays(7);
+                // Lấy dữ liệu từ cơ sở dữ liệu và chuyển đổi thành danh sách (sử dụng ToListAsync để tải lên phía client).
+                var rawData = await context.AuctionDetails
+                    .Where(a => a.CreateDate >= startOfWeek && a.CreateDate <= endOfWeek)
+                    .ToListAsync(); // Chỉ lọc dữ liệu, chưa nhóm.
+
+                // Nhóm dữ liệu trên phía client.
+                var groupedData = rawData
+                    .GroupBy(a => a.CreateDate.DayOfWeek)
+                    .Select(g => new
+                    {
+                        Day = g.Key.ToString(), // Chuyển đổi DayOfWeek thành chuỗi.
+                        Count = g.Count()
+                    })
+                    .ToList(); // Chuyển kết quả thành danh sách.
+
+                // Chuyển đổi kết quả thành dạng tuple (Day, Count) để trả về.
+                return groupedData.Select(r => (Day: r.Day.Substring(0, 3), Count: r.Count)).ToList();
+            }
+        }
+        public DateTime StartOfWeek(DayOfWeek startOfWeek)
+        {
+            var today = DateTime.Now;
+            int diff = today.DayOfWeek - startOfWeek;
+            if (diff < 0)
+            {
+                diff += 7;
+            }
+            return today.AddDays(-diff).Date;
+        }
+
     }
 }

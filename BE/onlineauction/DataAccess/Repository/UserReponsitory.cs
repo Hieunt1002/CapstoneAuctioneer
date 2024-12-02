@@ -184,7 +184,7 @@ namespace DataAccess.Repository
                 NameAuction = register.NameAuction,
                 Description = register.Description,
                 StartingPrice = register.StartingPrice,
-                MoneyDeposit = register.StartingPrice * 0.1m
+                MoneyDeposit = register.StartingPrice * 0.11m
             };
             try
             {
@@ -281,6 +281,12 @@ namespace DataAccess.Repository
             return result;
         }
 
+        public async Task<bool> Payment(Payment deposit)
+        {
+            var result = await RegistAuctionDAO.Instance.Payment(deposit);
+            return result;
+        }
+
         public async Task<int> getIdRegisterAuction(int id)
         {
             var result = await RegistAuctionDAO.Instance.getIdRegisterAuction(id);
@@ -293,7 +299,7 @@ namespace DataAccess.Repository
             return result;
         }
 
-        public async Task<ResponseDTO> UpdatePayment(int id, string status)
+        public async Task<ResponseDTO> UpdatePayment(string id, string status)
         {
             var result = await RegistAuctionDAO.Instance.UpdatePayment(id, status);
             return result;

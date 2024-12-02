@@ -37,6 +37,7 @@ namespace BusinessObject.Model
         public string? PlaceOfResidence { get; set; }
         public string? PlaceOfIssue { get; set; }
         public string? DateOfIssue { get; set; }
+        public DateTime CreateDate { get; set; } = DateTime.Now;
         [ForeignKey("Category")]
         public int? CategoryId { get; set; }
         public virtual Category? Category { get; set; }

@@ -287,7 +287,7 @@ namespace CapstoneAuctioneerAPI.Controller
                 if (autioneer.Status == true)
                 {
                     var results = await _adminService.AuctionDetailBatchJob(autioneer.AutioneerID);
-                    var enddate = ConvertToDateTime(results.EndDay, results.EndTime);
+                    var enddate = ConvertToDateTime(results.EndDay, results.EndTime, results.TimePerLap);
                     _batchService.CreateAuction(results.ID, enddate);
                 }
                 if (result.IsSucceed)
@@ -396,6 +396,22 @@ namespace CapstoneAuctioneerAPI.Controller
                 return StatusCode(500, new { Message = ex.Message });
             }
         }
+
+        [HttpGet]
+        [Route("product-statistics")]
+        public async Task<ActionResult> Productstatistics()
+        {
+            try
+            {
+                var result = await _adminService.Productstatistics();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message });
+            }
+        }
+
         /// <summary>
         /// Converts to date time.
         /// </summary>
@@ -403,21 +419,35 @@ namespace CapstoneAuctioneerAPI.Controller
         /// <param name="endTime">The end time.</param>
         /// <returns></returns>
         /// <exception cref="System.FormatException">Định dạng EndDay hoặc EndTime không hợp lệ.</exception>
-        private DateTime ConvertToDateTime(string endDay, string endTime)
+        private DateTime ConvertToDateTime(string endDay, string endTime, string timePerLap)
         {
-            string combinedDateTime = $"{endDay} {endTime}";
+            try
+            {
+                string combinedDateTime = $"{endDay} {endTime}";
 
-            // Sử dụng định dạng phù hợp cho ngày và giờ
-            if (DateTime.TryParseExact(combinedDateTime, "dd/MM/yyyy HH:mm",
-                                        System.Globalization.CultureInfo.InvariantCulture,
-                                        System.Globalization.DateTimeStyles.None, out DateTime endDateTime))
-            {
-                return endDateTime;
+                if (DateTime.TryParseExact(combinedDateTime, "dd/MM/yyyy HH:mm",
+                                            System.Globalization.CultureInfo.InvariantCulture,
+                                            System.Globalization.DateTimeStyles.None, out DateTime endDateTime))
+                {
+                    if (TimeSpan.TryParseExact(timePerLap, @"hh\:mm", System.Globalization.CultureInfo.InvariantCulture, out TimeSpan timePerLapSpan))
+                    {
+                        return endDateTime.Add(timePerLapSpan);
+                    }
+                    else
+                    {
+                        throw new FormatException("Định dạng TimePerLap không hợp lệ.");
+                    }
+                }
+                else
+                {
+                    throw new FormatException("Định dạng EndDay hoặc EndTime không hợp lệ.");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                throw new FormatException("Định dạng EndDay hoặc EndTime không hợp lệ.");
+                throw new Exception($"Lỗi khi chuyển đổi thời gian: {ex.Message}");
             }
         }
+
     }
 }

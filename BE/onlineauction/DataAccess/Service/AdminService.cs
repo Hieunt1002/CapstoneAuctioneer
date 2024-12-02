@@ -31,9 +31,9 @@ namespace DataAccess.Service
         /// </summary>
         /// <param name="adminRepository">The admin repository.</param>
         /// <param name="accountRepository">The account repository.</param>
-        public AdminService(IAdminRepository adminRepository, IAccountRepository accountRepository, IAuctioneerRepository auctioneerRepository) 
+        public AdminService(IAdminRepository adminRepository, IAccountRepository accountRepository, IAuctioneerRepository auctioneerRepository)
         {
-            _adminRepository= adminRepository;
+            _adminRepository = adminRepository;
             _accountRepository = accountRepository;
             _auctioneerRepository = auctioneerRepository;
         }
@@ -236,6 +236,35 @@ namespace DataAccess.Service
             var result = await _adminRepository.listBidderInAuction(id);
             return result;
         }
+        public async Task<object> Productstatistics()
+        {
+            var rawData = await _adminRepository.Productstatistics();
+
+            var weekDays = new List<string> { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+
+            var data = weekDays
+                .Select(day =>
+                {
+                    var item = rawData.FirstOrDefault(d => d.Day == day);
+                    return item.Equals(default) ? 0 : item.Count;
+                })
+                .ToList();
+
+            return new
+            {
+                labels = weekDays,
+                datasets = new[]
+                {
+                    new
+                    {
+                        label = "Daily Product Count",
+                        data = data,
+                        backgroundColor = "rgba(75, 192, 192, 0.6)"
+                    }
+                }
+            };
+        }
+
         public async Task<ResponseDTO> ListAuctioneerByUser(string id, int status)
         {
             var result = await _auctioneerRepository.ListAuctioneerByUser(id, status);

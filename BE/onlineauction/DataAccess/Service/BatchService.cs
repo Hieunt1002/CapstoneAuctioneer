@@ -2,6 +2,9 @@
 using DataAccess.DAO;
 using DataAccess.DTO;
 using Hangfire;
+using Microsoft.AspNetCore.Http;
+using Net.payOS;
+using Net.payOS.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +18,18 @@ namespace DataAccess.Service
     /// </summary>
     public class BatchService
     {
+
+        private readonly UserService _userService;
+        private readonly PayOS _payOS;
+        private readonly AuctionService _auctionService;
+
+        public BatchService(UserService userService, PayOS payOS, AuctionService auctionService)
+        {
+            _userService = userService;
+            _payOS = payOS;
+            _auctionService = auctionService;
+        }
+
         /// <summary>
         /// Creates the auction.
         /// </summary>
@@ -154,7 +169,31 @@ namespace DataAccess.Service
                 }
             }
         }
+        private string GetResetPasswordEmailContent(string resetLink)
+        {
+            string emailContent = @"<!DOCTYPE html>
+                            <html lang='en'>
+                            <head>
+                                <meta charset='UTF-8'>
+                                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                                <title>Reset Password</title>
+                            </head>
+                            <body>
+                                <p>Enter the link to payment <a href='" + resetLink + @"'>Link</a></p>
+                            </body>
+                            </html>";
+            return emailContent;
+        }
+        private int GenerateUniqueId()
+        {
+            byte[] buffer = Guid.NewGuid().ToByteArray();
+            long longValue = BitConverter.ToInt64(buffer, 0); // Chuyển GUID thành long
 
+            // Giới hạn giá trị trả về chỉ trong phạm vi 5 chữ số
+            int uniqueId = (int)(Math.Abs(longValue) % 100000); // Lấy giá trị dương và chỉ lấy 5 chữ số cuối cùng
+
+            return uniqueId;
+        }
         /// <summary>
         /// Notifies the auction complete.
         /// </summary>
@@ -168,12 +207,37 @@ namespace DataAccess.Service
                 // Kiểm tra BidderEmail
                 if (result.BidderEmail != null)
                 {
+                    var payment = await _auctionService.TotalPay(id, result.AccountId);
+                    ItemData itemData = new ItemData(payment.nameAuction, 1, payment.priceAuction);
+                    List<ItemData> items = new List<ItemData>();
+                    items.Add(itemData);
+                    var orderCode = GenerateUniqueId();
+                    var pay = new Payment
+                    {
+                        RAID = payment.IdResgiter,
+                        Status = false,
+                        OrderCode = orderCode.ToString(),
+                        PaymentType = "Payment online",
+                    };
+                    var pays = await _userService.Payment(pay);
+                    if (pays != true)
+                    {
+                        throw new Exception();
+                    }
+                    string shortenedName = payment.nameAuction.Length > 10
+                            ? payment.nameAuction.Substring(0, 10)
+                            : payment.nameAuction;
+                    var expirationTime = DateTime.Now.AddHours(24).ToString("yyyy-MM-dd HH:mm:ss");
+                    PaymentData paymentData = new PaymentData(orderCode, payment.priceAuction, $"Thanh Toán {shortenedName}", items, "http://localhost:5173/cancel", "http://localhost:5173/success", expirationTime);
+                    CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
+                    var payments = GetResetPasswordEmailContent(createPayment.ToString());
                     // Gửi email cho Bidder
                     var bidderSuccessBody = new StringBuilder();
                     bidderSuccessBody.AppendLine("Chúc mừng! Bạn đã thắng cuộc đấu giá.");
                     bidderSuccessBody.AppendLine($"Giá đấu thành công: {result.Price}");
                     bidderSuccessBody.AppendLine("Yêu cầu thanh toán trong vòng 2 ngày. Nếu không thanh toán, bạn sẽ bị nhường lại cho người khác.");
                     bidderSuccessBody.AppendLine("Xin lưu ý: Nếu bạn không thanh toán quá 3 lần, tài khoản của bạn sẽ bị khóa.");
+                    bidderSuccessBody.AppendLine($"{payments}");
 
                     await MailUtils.SendMailGoogleSmtp(
                         fromEmail: "nguyenanh0978638@gmail.com",

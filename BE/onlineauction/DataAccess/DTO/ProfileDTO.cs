@@ -30,5 +30,6 @@ namespace DataAccess.DTO
         public string? placeOfResidence { get; set; }
         public string? placeOfIssue { get; set; }
         public string? dateOfIssue { get; set; }
+        public int? categoryId { get; set; }
     }
 }

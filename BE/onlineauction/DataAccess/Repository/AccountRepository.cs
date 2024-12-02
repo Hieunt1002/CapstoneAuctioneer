@@ -356,6 +356,7 @@ namespace DataAccess.Repository
                 dateOfIssue = accountDetail.DateOfIssue,
                 placeOfIssue = accountDetail.PlaceOfIssue,
                 placeOfResidence = accountDetail.PlaceOfResidence,
+                categoryId = accountDetail.CategoryId,
             };
             return new ResponseDTO { Result = profileDTO, IsSucceed = true, Message = "Successfully" };
         }
@@ -648,7 +649,8 @@ namespace DataAccess.Repository
 
             var createAccountDetail = new AccountDetail
             {
-                AccountID = createAccount.Id
+                AccountID = createAccount.Id,
+                CategoryId = updatePermissionDTO.category == 0 ? null : updatePermissionDTO.category,
             };
 
             var createAccountDetailResult = await AccountDAO.Instance.AddAccountDetailAsync(createAccountDetail);

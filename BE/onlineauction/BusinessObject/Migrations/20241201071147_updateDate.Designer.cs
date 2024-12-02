@@ -4,6 +4,7 @@ using BusinessObject.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BusinessObject.Migrations
 {
     [DbContext(typeof(ConnectDB))]
-    partial class ConnectDBModelSnapshot : ModelSnapshot
+    [Migration("20241201071147_updateDate")]
+    partial class updateDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -404,10 +407,6 @@ namespace BusinessObject.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PayID"));
 
-                    b.Property<string>("OrderCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("PaymentDate")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -418,9 +417,6 @@ namespace BusinessObject.Migrations
 
                     b.Property<int>("RAID")
                         .HasColumnType("int");
-
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
 
                     b.HasKey("PayID");
 
@@ -545,13 +541,13 @@ namespace BusinessObject.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "a9db9844-7962-429f-b266-ba83132e2f83",
+                            Id = "98939845-60c2-410b-b7cc-dc53f85dec00",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "673257ad-0e95-4e9f-a3bd-8d0828381c8c",
+                            Id = "396029a9-bcbf-4b54-877b-b51de790a052",
                             Name = "user",
                             NormalizedName = "USER"
                         });

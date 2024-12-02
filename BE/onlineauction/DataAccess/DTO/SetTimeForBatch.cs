@@ -17,5 +17,6 @@ namespace DataAccess.DTO
         public string AccountAdminId { get; set; }
         public string AccountAuctionId { get; set; }
         public string Title { get; set; }
+        public int RAID { get; set; }
     }
 }

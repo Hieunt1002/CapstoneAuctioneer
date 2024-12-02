@@ -261,15 +261,15 @@ namespace DataAccess.DAO
                 throw new Exception(ex.Message);
             }
         }
-        public async Task<ResponseDTO> UpdatePayment(int id, string status)
+        public async Task<ResponseDTO> UpdatePayment(string id, string status)
         {
             try
             {
                 using (var context = new ConnectDB())
                 {
                     // Tìm kiếm các bản ghi tương ứng với `RAID` trong hai bảng
-                    var re = await context.RegistAuctioneers.FirstOrDefaultAsync(rg => rg.RAID == id);
-                    var find = await context.Deposits.FirstOrDefaultAsync(rg => rg.RAID == id);
+                    var find = await context.Deposits.FirstOrDefaultAsync(rg => rg.DID == id);
+                    var re = await context.RegistAuctioneers.FirstOrDefaultAsync(rg => rg.RAID == find.RAID);
 
                     // Kiểm tra trạng thái "cancel" và thực hiện xóa nếu phù hợp
                     if (status == "cancel")
@@ -288,7 +288,17 @@ namespace DataAccess.DAO
                     }
                     else
                     {
-                        // Trả về thông báo nếu không tìm thấy bản ghi
+                        var pay = await context.Payments.FirstOrDefaultAsync(p => p.OrderCode == id);
+                        if(status == "cancel")
+                        {
+                            context.Payments.Remove(pay);
+                        }
+                        else
+                        {
+                            pay.Status = true;
+                            context.Entry(pay).State = EntityState.Modified;
+                        }
+                        await context.SaveChangesAsync();
                         return new ResponseDTO { IsSucceed = false, Message = "Record not found" };
                     }
                 }
@@ -535,7 +545,7 @@ namespace DataAccess.DAO
                 {
                     var query = (from r in context.RegistAuctioneers
                                  join p in context.Payments on r.RAID equals p.RAID
-                                 where r.RAID == id
+                                 where r.RAID == id && p.Status == true
                                  select r).FirstOrDefault();
                     if (query == null)
                     {
@@ -708,6 +718,22 @@ namespace DataAccess.DAO
                 using (var context = new ConnectDB())
                 {
                     context.Deposits.Add(deposit);
+                    await context.SaveChangesAsync();
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public async Task<bool> Payment(Payment deposit)
+        {
+            try
+            {
+                using (var context = new ConnectDB())
+                {
+                    context.Payments.Add(deposit);
                     await context.SaveChangesAsync();
                     return true;
                 }
