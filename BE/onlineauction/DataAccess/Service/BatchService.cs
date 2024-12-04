@@ -97,7 +97,6 @@ namespace DataAccess.Service
 
             if (check.status != true)
             {
-
                 // Kiểm tra BidderEmail
                 if (result.BidderEmail != null)
                 {

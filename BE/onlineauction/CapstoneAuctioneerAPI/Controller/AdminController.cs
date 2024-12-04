@@ -357,6 +357,7 @@ namespace CapstoneAuctioneerAPI.Controller
         /// <returns></returns>
         [HttpPut]
         [Route("reUpAuction")]
+        [Authorize(Policy = "ADMIN")]
         public async Task<ActionResult> ReUpAuction(int id)
         {
             try
@@ -380,6 +381,7 @@ namespace CapstoneAuctioneerAPI.Controller
         /// <returns></returns>
         [HttpGet]
         [Route("listBidderInAuction")]
+        [Authorize(Policy = "ADMIN")]
         public async Task<ActionResult> ListUserInAuction(int auctionId)
         {
             try
@@ -399,11 +401,29 @@ namespace CapstoneAuctioneerAPI.Controller
 
         [HttpGet]
         [Route("product-statistics")]
+        [Authorize(Policy = "ADMIN")]
         public async Task<ActionResult> Productstatistics()
         {
             try
             {
                 var result = await _adminService.Productstatistics();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message });
+            }
+        }
+
+
+        [HttpGet]
+        [Route("money-statistics")]
+        [Authorize(Policy = "ADMIN")]
+        public async Task<ActionResult> MonthlyIncomeStatistics()
+        {
+            try
+            {
+                var result = await _adminService.MonthlyIncomeStatistics();
                 return Ok(result);
             }
             catch (Exception ex)

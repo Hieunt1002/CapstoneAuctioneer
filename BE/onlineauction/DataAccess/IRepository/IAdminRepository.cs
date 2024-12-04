@@ -108,6 +108,7 @@ namespace DataAccess.IRepository
         /// </summary>
         /// <returns></returns>
         Task<List<(string Day, int Count)>> Productstatistics();
+        Task<List<(string Month, decimal Count)>> MonthlyIncomeStatistics();
 
     }
 }

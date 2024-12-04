@@ -239,13 +239,13 @@ namespace DataAccess.DAO
                     {
                         // Existing bet found, so update it
                         bet.PriceBit = check.ListAuction.StartingPrice + price;
-                        bet.BidTime = DateTime.Now.ToString("dd/MM/yyyy : HH:mm:ss");
+                        bet.BidTime = DateTime.Now;
                         context.Bets.Add(bet);  // Add the new bet
                     }
                     else
                     {
                         bet.PriceBit = bet.PriceBit + price;
-                        bet.BidTime = DateTime.Now.ToString("dd/MM/yyyy : HH:mm:ss");
+                        bet.BidTime = DateTime.Now;
                         context.Bets.Add(bet);  // Add the new bet
                     }
                     await context.SaveChangesAsync();
@@ -377,7 +377,7 @@ namespace DataAccess.DAO
                                     ID = b.PlacingABidID,
                                     userId = r.AccountID,
                                     Price = b.PriceBit,
-                                    DateAndTime = b.BidTime
+                                    DateAndTime = b.BidTime.ToString("dd/MM/yyyy HH:mm")
                                 };
                     return await query.OrderByDescending(o => o.ID).ToListAsync();
                 }
@@ -517,7 +517,7 @@ namespace DataAccess.DAO
                     var query = (from r in context.RegistAuctioneers
                                  where r.ListAuctionID == id
                                  select r).FirstOrDefault();
-                    query.PaymentTerm = DateTime.UtcNow.AddDays(2).ToString();
+                    query.PaymentTerm = DateTime.UtcNow.AddDays(1).ToString();
                     context.Entry(query).State = EntityState.Modified;
                     context.SaveChangesAsync();
                 }

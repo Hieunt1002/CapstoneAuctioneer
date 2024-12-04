@@ -334,5 +334,18 @@ namespace DataAccess.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<List<(string Month, decimal Count)>> MonthlyIncomeStatistics()
+        {
+            try
+            {
+                var result = await AuctionDAO.Instance.MonthlyIncomeStatistics();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }

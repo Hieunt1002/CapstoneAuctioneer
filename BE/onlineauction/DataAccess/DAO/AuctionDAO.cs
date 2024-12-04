@@ -1464,6 +1464,42 @@ namespace DataAccess.DAO
                 return groupedData.Select(r => (Day: r.Day.Substring(0, 3), Count: r.Count)).ToList();
             }
         }
+
+        public async Task<List<(string Month, decimal Count)>> MonthlyIncomeStatistics()
+        {
+            using (var context = new ConnectDB())
+            {
+                // Lấy toàn bộ dữ liệu từ cơ sở dữ liệu, áp dụng AsEnumerable để thực hiện trên client.
+                var rawData = await context.Bets
+                    .Include(r => r.RegistAuctioneer)
+                    .ToListAsync();
+
+                // Lọc dữ liệu trên client để chỉ lấy các bản ghi trong khoảng từ đầu năm đến hiện tại.
+                var filteredData = rawData
+                    .Where(a => a.BidTime >= new DateTime(DateTime.Now.Year, 1, 1) && a.BidTime <= DateTime.Now)
+                    .ToList();
+
+                // Nhóm dữ liệu theo tháng và tính tổng thu nhập cho mỗi tháng.
+                var groupedData = filteredData
+                    .GroupBy(b => b.BidTime.Month) // Nhóm theo tháng.
+                    .Select(g => new
+                    {
+                        Month = g.Key, // Lấy tháng từ nhóm.
+                        TotalIncome = g.Sum(x => x.PriceBit) // Tính tổng thu nhập cho mỗi nhóm tháng.
+                    })
+                    .OrderBy(g => g.Month) // Sắp xếp theo thứ tự từ tháng 1 đến tháng 12.
+                    .ToList();
+
+                // Chuyển đổi kết quả thành dạng tuple (Month, TotalIncome) để trả về.
+                var result = groupedData
+                    .Select(r => (Month: GetMonthName(r.Month), Count: r.TotalIncome)) // Chuyển đổi tháng từ số thành tên tháng.
+                    .ToList();
+
+                return result;
+            }
+        }
+
+
         public DateTime StartOfWeek(DayOfWeek startOfWeek)
         {
             var today = DateTime.Now;
@@ -1474,6 +1510,10 @@ namespace DataAccess.DAO
             }
             return today.AddDays(-diff).Date;
         }
-
+        private string GetMonthName(int monthNumber)
+        {
+            var months = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+            return months[monthNumber - 1]; 
+        }
     }
 }
