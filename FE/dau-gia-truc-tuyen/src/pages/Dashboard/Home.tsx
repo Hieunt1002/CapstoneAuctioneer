@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { moneyStatistics, productStatistics } from "@queries/AdminAPI";
 
 ChartJS.register(
   CategoryScale,
@@ -22,33 +23,49 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+interface DataChart {
+  labels: string[]; // Array of strings for labels
+  datasets: {
+    label: string;
+    data: number[]; // Array of numbers for data points
+    backgroundColor: string;
+  }[];
+}
+
+interface DataMoneyChart {
+  labels: string[]; // Array of strings for labels
+  datasets: {
+    label: string;
+    data: number[]; // Array of numbers for data points
+    fill: boolean;
+    borderColor: string,
+    backgroundColor: string,
+  }[];
+}
 
 const Home = () => {
+  const [dailyData, setDailyData] = useState<DataChart>({
+    labels: [],
+    datasets: [{ label: "", data: [], backgroundColor: "" }],
+  });
+  const [monthlyData, setMonthlyData] = useState<DataMoneyChart>({
+    labels: [],
+    datasets: [{ label: "", data: [], fill: false, borderColor: "", backgroundColor: "" }],
+  });
 
-  const dailyData = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    datasets: [
-      {
-        label: "Daily Money",
-        data: [5000, 10000, 7500, 15000, 20000, 30000, 25000],
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-      },
-    ],
-  };
-
-
-  const monthlyData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-    datasets: [
-      {
-        label: "Monthly Money",
-        data: [53000, 75000, 64000, 85000, 78000, 102000, 120000, 95000, 123000, 140000, 130000, 150000],
-        fill: false,
-        borderColor: "rgba(54, 162, 235, 0.6)",
-        backgroundColor: "rgba(54, 162, 235, 0.6)",
-      },
-    ],
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await productStatistics();
+        const responsemoney = await moneyStatistics();
+        setMonthlyData(responsemoney);
+        setDailyData(response);
+      } catch (error) {}
+    };
+    fetchData();
+    console.log("monthlyData", monthlyData);
+    
+  }, []);
 
   return (
     <div className="container mx-auto p-6 bg-gray-100 min-h-screen mt-16">
@@ -61,7 +78,7 @@ const Home = () => {
           </svg>
           <div>
             <div className="text-3xl font-bold text-gray-800"> 
-              $53k
+              5.000.000 VNĐ
             </div>
             <div className="text-sm text-gray-500">Today's Money</div>
           </div>
@@ -76,7 +93,7 @@ const Home = () => {
           </svg>
           <div>
             <div className="text-3xl font-bold text-gray-800"> 
-              $53k
+              5.000.000 VNĐ
             </div>
             <div className="text-sm text-gray-500">Today's Money</div>
           </div>
@@ -90,7 +107,7 @@ const Home = () => {
           </svg>
           <div>
             <div className="text-3xl font-bold text-gray-800"> 
-              $53k
+              5.000.000 VNĐ
             </div>
             <div className="text-sm text-gray-500">Today's Money</div>
           </div>
@@ -104,7 +121,7 @@ const Home = () => {
           </svg>
           <div>
             <div className="text-3xl font-bold text-gray-800"> 
-              $53k
+              5.000.000 VNĐ
             </div>
             <div className="text-sm text-gray-500">Today's Money</div>
           </div>

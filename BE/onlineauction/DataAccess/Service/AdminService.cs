@@ -303,9 +303,11 @@ namespace DataAccess.Service
                 {
             new
             {
-                label = "Monthly Income",
+                label = "Money Statistics",
                 data = data,
-                backgroundColor = "rgba(75, 192, 192, 0.6)"
+                fill = false,
+                borderColor = "rgba(54, 162, 235, 0.6)",
+                backgroundColor = "rgba(54, 162, 235, 0.6)"
             }
         }
             };
