@@ -287,6 +287,7 @@ export const UpdatePayment = async (id: string, status: string) => {
 export const registerForAuction = async (id: number) => {
   try {
     const token = localStorage.getItem("token");
+
     // Kiểm tra xem token có tồn tại không
     if (!token) {
       throw new Error("Token not found in localStorage.");
@@ -402,5 +403,18 @@ export const deleteAuction = async (id: number) => {
     return response.data;
   } catch (error) {
     throw new Error('Failed to fetch category-based auction list');
+  }
+};
+
+export const getListNotification = async () => {
+  try {
+    const token = getToken();
+    const response = await axiosInstance.get('api/notification/listNotification', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch auction details', error);
+    throw error;
   }
 };

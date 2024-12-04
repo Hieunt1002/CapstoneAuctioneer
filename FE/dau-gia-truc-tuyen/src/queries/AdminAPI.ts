@@ -156,10 +156,9 @@ export const productStatistics = async () => {
                 Authorization: `Bearer ${token}`,
             },
         });
-        
         return response.data;
     } catch (error) {
-        throw new Error('Error fetching user profile'); 
+        throw new Error('Error fetching user'); 
     }
 };
 
@@ -171,13 +170,11 @@ export const moneyStatistics = async () => {
                 Authorization: `Bearer ${token}`,
             },
         });
-        
         return response.data;
     } catch (error) {
-        throw new Error('Error fetching user profile'); 
+        throw new Error('Error fetching user'); 
     }
 };
-
 export const createAccount = async (username: string, password: string, email: string, category: string) => {
     try {
     const token = localStorage.getItem('token');
