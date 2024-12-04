@@ -287,7 +287,6 @@ export const UpdatePayment = async (id: string, status: string) => {
 export const registerForAuction = async (id: number) => {
   try {
     const token = localStorage.getItem("token");
-
     // Kiểm tra xem token có tồn tại không
     if (!token) {
       throw new Error("Token not found in localStorage.");
