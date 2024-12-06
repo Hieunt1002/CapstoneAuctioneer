@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { AuctionDetails } from 'types';
+import { Account, AuctionDetails } from 'types';
 import { Box, IconButton, TextField, Grid, Button, Typography, Modal } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -10,6 +10,8 @@ import { getAuctionRoomDetail, postBidMoney } from '../../queries/AuctionAPI';
 import CountDownTimeForRoom from '@common/coutdown-timer/CountDownTimeForRoom';
 import useTimeDifference from '@hooks/useTimeDifference';
 import { useParams } from 'react-router-dom';
+import { profileUser } from '@queries/AdminAPI';
+import { useMessage } from '@contexts/MessageContext';
 
 const modalStyle = {
   position: 'absolute',
@@ -46,23 +48,13 @@ interface RoomAuctionDetails {
   // Add other properties as needed
 }
 
-const convertToRoomTime = ({
-  startDay,
-  startTime,
-}: {
-  startDay: string;
-  startTime: string;
-}): string => {
-  return `${startDay} ${startTime}`;
-};
-
 const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
   const [inputValue, setInputValue] = useState(1); // Start with a numeric value
- const [bidHistory, setBidHistory] = useState<{ Price: number }[]>([]);
+ const [bidHistory, setBidHistory] = useState<{ Price: number, userId: string }[]>([]);
   const [currentPrice, setCurrentPrice] = useState(0);
+  const [userProfile, setUserProfile] = useState<Account | null>(null);
   const [roomAuctionDetails, setRoomAuctionDetails] = useState<RoomAuctionDetails | null>(null);
   const [isTimeOut, setIsTimeOut] = useState(false);
-  const [close, setClose] = useState(true);
   const [timeRound, setTimeRound] = useState('');
   const [bidStep, setBidStep] = useState(0);
   const { id } = useParams<{ id: string }>();
@@ -71,27 +63,6 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
   //   startDay: roomAuctionDetails?.startDay || '',
   //   startTime: roomAuctionDetails?.startTime || '',
   // });
-
-  const handleGoHome = () => {
-    setClose(false);
-  };
-
-  const calculateFinalTime = (
-    endTime: string,
-    endDay: string
-  ): Date => {
-    const [endHours, endMinutes] = endTime.split(':').map(Number); // Tách giờ và phút từ endTime
-
-    const endDate = new Date(endDay); // Tạo đối tượng Date từ endDay
-    endDate.setHours(endHours, endMinutes, 0, 0); // Gán giờ và phút từ endTime
-
-    return endDate; // Trả về đối tượng Date đã được tính toán
-  };
-
-  const isRegistrationAllowed = (endTime: string, endDay: string): boolean => {
-    const finalTime = calculateFinalTime(endTime, endDay);
-    return finalTime > new Date(); // Kiểm tra nếu thời gian kết thúc lớn hơn hiện tại
-  };
 
   useEffect(() => {
     const fetchAuctionRoomDetails = async () => {
@@ -205,7 +176,19 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
       console.error('Failed to place bid:', error);
     }
   };
-
+  const { setErrorMessage } = useMessage();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await profileUser();
+        setUserProfile(response.result);
+      } catch (error) 
+      {
+        setErrorMessage('Not found data');
+      }
+    };
+    fetchData();
+  }, []);
   return (
     <>
       <div className="container flex flex-col gap-2 h-full">
@@ -340,7 +323,7 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
             Phiên đấu giá kết thúc!
           </Typography>
 
-          {isTimeOut && bidHistory[0]?.Price === currentPrice ? (
+          {isTimeOut && bidHistory[0]?.Price === currentPrice && bidHistory[0].userId === userProfile?.accountId ? (
             <>
               <Typography
                 id="modal-modal-title"
