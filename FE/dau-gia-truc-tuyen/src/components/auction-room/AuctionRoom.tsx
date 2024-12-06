@@ -50,7 +50,7 @@ interface RoomAuctionDetails {
 
 const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
   const [inputValue, setInputValue] = useState(1); // Start with a numeric value
- const [bidHistory, setBidHistory] = useState<{ Price: number, userId: string }[]>([]);
+  const [bidHistory, setBidHistory] = useState<{ Price: number, userId: string }[]>([]);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [userProfile, setUserProfile] = useState<Account | null>(null);
   const [roomAuctionDetails, setRoomAuctionDetails] = useState<RoomAuctionDetails | null>(null);
@@ -182,8 +182,7 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
       try {
         const response = await profileUser();
         setUserProfile(response.result);
-      } catch (error) 
-      {
+      } catch (error) {
         setErrorMessage('Not found data');
       }
     };
@@ -202,9 +201,8 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
               {bidHistory.map((bid: any, index) => (
                 <>
                   <div
-                    className={`flex justify-between w-full items-center mb-2 mt-2 ${
-                      index === 0 ? 'text-green-600' : 'text-red-600'
-                    }`}
+                    className={`flex justify-between w-full items-center mb-2 mt-2 ${index === 0 ? 'text-green-600' : 'text-red-600'
+                      }`}
                   >
                     <div>
                       <p>{new Intl.NumberFormat('vi-VN').format(bid.Price)} VNĐ</p>
@@ -312,62 +310,65 @@ const AuctionRoom: React.FC<AuctionRoomProps> = ({ auctionDetailInfor }) => {
           </div>
         </div>
       </div>
-      <Modal
-        open={isTimeOut}
-        onClose={() => setIsTimeOut(!isTimeOut)}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={modalStyle}>
-          <Typography id="modal-modal-title" variant="h6" component="h2" className="text-center">
-            Phiên đấu giá kết thúc!
-          </Typography>
+      {userProfile &&
+        <>
+          <Modal
+            open={isTimeOut}
+            onClose={() => setIsTimeOut(!isTimeOut)}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+          >
+            <Box sx={modalStyle}>
 
-          {isTimeOut && bidHistory[0]?.Price === currentPrice && bidHistory[0].userId === userProfile?.accountId ? (
-            <>
-              <Typography
-                id="modal-modal-title"
-                variant="h6"
-                component="h1"
-                className="text-center text-red-600"
-              >
-                Chúc mừng bạn đã thắng cuộc
+              <Typography id="modal-modal-title" variant="h6" component="h2" className="text-center">
+                Phiên đấu giá kết thúc!
               </Typography>
-              <img src="/winner.png" alt="Winner" className="h-40 w-80 mx-auto" />
-              <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                Mức giá cuối cùng:{' '}
-                <span className="font-bold">
-                  {formatMoney((bidHistory[0] as { Price: number })?.Price || 0)} VNĐ
-                </span>
-              </Typography>
-              <Typography style={{ fontSize: '14px' }} className="text-center font-thin italic">
-                Vui lòng kiểm tra email của bạn để hoàn thành thủ tục đấu giá sau khi chiến thắng.
-              </Typography>
-            </>
-          ) : (
-            <>
-              <Typography
-                id="modal-modal-title"
-                variant="h6"
-                component="h1"
-                className="text-center text-red-600"
-              >
-                Bạn không thắng phiên đấu giá này
-              </Typography>
-              <img src="/lose.png" alt="Loser" className="h-40 w-80 mx-auto" />
-               <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                Mức giá cuối cùng:{' '}
-                <span className="font-bold">
-                  {formatMoney((bidHistory[0] as { Price: number })?.Price || 0)} VNĐ
-                </span>
-              </Typography>
-              <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                Hãy thử lại lần sau!
-              </Typography>
-            </>
-          )}
-        </Box>
-      </Modal>
+              {isTimeOut && bidHistory[0]?.Price === currentPrice && bidHistory[0].userId === userProfile?.accountId ? (
+                <>
+                  <Typography
+                    id="modal-modal-title"
+                    variant="h6"
+                    component="h1"
+                    className="text-center text-red-600"
+                  >
+                    Chúc mừng bạn đã thắng cuộc
+                  </Typography>
+                  <img src="/winner.png" alt="Winner" className="h-40 w-80 mx-auto" />
+                  <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                    Mức giá cuối cùng:{' '}
+                    <span className="font-bold">
+                      {formatMoney((bidHistory[0] as { Price: number })?.Price || 0)} VNĐ
+                    </span>
+                  </Typography>
+                  <Typography style={{ fontSize: '14px' }} className="text-center font-thin italic">
+                    Vui lòng kiểm tra email của bạn để hoàn thành thủ tục đấu giá sau khi chiến thắng.
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Typography
+                    id="modal-modal-title"
+                    variant="h6"
+                    component="h1"
+                    className="text-center text-red-600"
+                  >
+                    Bạn không thắng phiên đấu giá này
+                  </Typography>
+                  <img src="/lose.png" alt="Loser" className="h-40 w-80 mx-auto" />
+                  <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                    Mức giá cuối cùng:{' '}
+                    <span className="font-bold">
+                      {formatMoney((bidHistory[0] as { Price: number })?.Price || 0)} VNĐ
+                    </span>
+                  </Typography>
+                  <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                    Hãy thử lại lần sau!
+                  </Typography>
+                </>
+              )}
+            </Box>
+          </Modal>
+        </>}
     </>
   );
 };
