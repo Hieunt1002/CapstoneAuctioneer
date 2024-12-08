@@ -179,10 +179,10 @@ const AddInfo = () => {
       return;
     }
     const formData = new FormData();
-    formData.append('fullName', fullName);
-    formData.append('gender', JSON.stringify(gender));
+    formData.append('fullName', data?.name);
+    formData.append('gender', JSON.stringify(data?.sex === 'NAM' ? 1 : 0));
 
-    formData.append('birthdate', birthDate);
+    formData.append('birthdate', data?.dob);
     formData.append('phone', phone);
     formData.append('city', city);
     formData.append('district', district);
@@ -294,7 +294,7 @@ const AddInfo = () => {
                     onChange={(e) => setGender(e.target.value === '1')}
                     required
                   >
-                    <option value="">Chon gioi tinh</option>
+                    <option value="">Choose gender</option>
                     <option value="1">Nam</option>
                     <option value="0">Nu</option>
                   </select>
