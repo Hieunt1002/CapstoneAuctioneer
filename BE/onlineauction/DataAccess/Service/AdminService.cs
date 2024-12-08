@@ -313,7 +313,11 @@ namespace DataAccess.Service
             };
         }
 
-
+        public async Task<ResponseDTO> TotalAsync()
+        {
+            var result = await _adminRepository.TotalAsync();
+            return result;
+        }
 
 
         public async Task<ResponseDTO> ListAuctioneerByUser(string id, int status)

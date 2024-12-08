@@ -38,13 +38,13 @@ namespace DataAccess.Service
         public void CreateAuction(int id, DateTime endTime)
         {
             Console.WriteLine($"{id} đã được tạo và sẽ kết thúc vào {endTime}.");
-            DateTime notificationTime = endTime.AddMinutes(2);
+            DateTime notificationTime = DateTime.Now.AddSeconds(5);
             TimeSpan delay = notificationTime - DateTime.Now;
 
             // Kiểm tra xem delay có nhỏ hơn 0 không, nếu có thì không tạo job
             if (delay.TotalMilliseconds > 0)
             {
-                BackgroundJob.Schedule(() => NotifyAuctionComplete(id), delay);
+                BackgroundJob.Schedule(() => NotifyAuctionComplete(14), delay);
                 Console.WriteLine($"{id} đã được tạo và sẽ kết thúc vào {delay}.");
             }
             else
@@ -204,110 +204,114 @@ namespace DataAccess.Service
             if (result != null)
             {
                 // Kiểm tra BidderEmail
-                if (result.BidderEmail != null)
+                if (result.BidderEmail != null && (int)result.Price > 0)
                 {
-                    var payment = await _auctionService.TotalPay(id, result.AccountId);
-                    ItemData itemData = new ItemData(payment.nameAuction, 1, payment.priceAuction);
-                    List<ItemData> items = new List<ItemData>();
-                    items.Add(itemData);
-                    var orderCode = GenerateUniqueId();
-                    var pay = new Payment
+                    var checkpay = await AuctionDAO.Instance.findPay(result.RAID);
+                    if (checkpay == null)
                     {
-                        RAID = payment.IdResgiter,
-                        Status = false,
-                        OrderCode = orderCode.ToString(),
-                        PaymentType = "Payment online",
-                    };
-                    var pays = await _userService.Payment(pay);
-                    if (pays != true)
-                    {
-                        throw new Exception();
-                    }
-                    string shortenedName = payment.nameAuction.Length > 10
-                            ? payment.nameAuction.Substring(0, 10)
-                            : payment.nameAuction;
-                    var expirationTime = DateTime.Now.AddHours(24).ToString("yyyy-MM-dd HH:mm:ss");
-                    PaymentData paymentData = new PaymentData(orderCode, payment.priceAuction, $"Thanh Toán {shortenedName}", items, "http://localhost:5173/cancel", "http://localhost:5173/success", expirationTime);
-                    CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
-                    var payments = GetResetPasswordEmailContent(createPayment.ToString());
-                    // Gửi email cho Bidder
-                    var bidderSuccessBody = new StringBuilder();
-                    bidderSuccessBody.AppendLine("Chúc mừng! Bạn đã thắng cuộc đấu giá.");
-                    bidderSuccessBody.AppendLine($"Giá đấu thành công: {result.Price}");
-                    bidderSuccessBody.AppendLine("Yêu cầu thanh toán trong vòng 2 ngày. Nếu không thanh toán, bạn sẽ bị nhường lại cho người khác.");
-                    bidderSuccessBody.AppendLine("Xin lưu ý: Nếu bạn không thanh toán quá 3 lần, tài khoản của bạn sẽ bị khóa.");
-                    bidderSuccessBody.AppendLine($"{payments}");
-
-                    await MailUtils.SendMailGoogleSmtp(
-                        fromEmail: "nguyenanh0978638@gmail.com",
-                        toEmail: result.BidderEmail,
-                        subject: "Auction Results - Success",
-                        body: bidderSuccessBody.ToString()
-                    );
-
-                    // Gửi email cho Auctioneer
-                    await MailUtils.SendMailGoogleSmtp(
-                        fromEmail: "nguyenanh0978638@gmail.com",
-                        toEmail: result.AuctioneerEmail,
-                        subject: "Auction Results - Success",
-                        body: GenerateAuctioneerEmailBody(result)
-                    );
-
-                    // Gửi email cho Admin
-                    await MailUtils.SendMailGoogleSmtp(
-                        fromEmail: "nguyenanh0978638@gmail.com",
-                        toEmail: result.EmailAdmin,
-                        subject: "Auction Results - Success",
-                        body: GenerateAdminEmailBody(result)
-                    );
-
-                    RegistAuctionDAO.Instance.UpdateInforPayment(id);
-                    var RAID = await AuctionDAO.Instance.UpdateWinningStatus(id);
-
-                    // Tạo thông báo cho người thua cuộc
-                    var checkuser = await AuctionDAO.Instance.InformationOfTheLoser(RAID, id);
-                    if (checkuser != null)
-                    {
-                        foreach (var item in checkuser)
+                        ItemData itemData = new ItemData(result.Title, 1, (int)result.Price);
+                        List<ItemData> items = new List<ItemData>();
+                        items.Add(itemData);
+                        var orderCode = GenerateUniqueId();
+                        var pay = new Payment
                         {
-                            var notifications = new Notification
-                            {
-                                AccountID = item,
-                                Title = $"Kết quả buổi đấu giá: {result.Title}",
-                                Description = "Xin chia buồn với bạn đã không đấu giá được sản phẩm với mức giá mong muốn."
-                            };
-                            await NotificationDAO.Instance.AddNotification(notifications);
+                            RAID = result.RAID,
+                            Status = false,
+                            PaymentDate = DateTime.Now.ToString("dd/MM/yyyy"),
+                            OrderCode = orderCode.ToString(),
+                            PaymentType = "Payment online",
+                        };
+                        var pays = await _userService.Payment(pay);
+                        if (pays != true)
+                        {
+                            throw new Exception();
                         }
-                    }
-                    else
-                    {
-                        var notificationForBidder = new Notification
-                        {
-                            AccountID = result.AccountId,
-                            Title = $"Kết quả buổi đấu giá: {result.Title}",
-                            Description = bidderSuccessBody.ToString()
-                        };
-                        await NotificationDAO.Instance.AddNotification(notificationForBidder);
+                        string shortenedName = result.Title.Length > 10
+                                ? result.Title.Substring(0, 10)
+                                : result.Title;
+                        var expirationTime = DateTime.Now.AddHours(24).ToString("yyyy-MM-dd HH:mm:ss");
+                        PaymentData paymentData = new PaymentData(orderCode, (int)result.Price, $"Thanh Toán {shortenedName}", items, "http://localhost:5173/cancel", "http://localhost:5173/success", expirationTime);
+                        CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
+                        var payments = GetResetPasswordEmailContent(createPayment.checkoutUrl.ToString());
+                        // Gửi email cho Bidder
+                        var bidderSuccessBody = new StringBuilder();
+                        bidderSuccessBody.AppendLine("Chúc mừng! Bạn đã thắng cuộc đấu giá.");
+                        bidderSuccessBody.AppendLine($"Giá đấu thành công: {result.Price}");
+                        bidderSuccessBody.AppendLine("Yêu cầu thanh toán trong vòng 1 ngày. Nếu không thanh toán, bạn sẽ bị nhường lại cho người khác.");
+                        bidderSuccessBody.AppendLine("Xin lưu ý: Nếu bạn không thanh toán quá 3 lần, tài khoản của bạn sẽ bị khóa.");
+                        bidderSuccessBody.AppendLine($"{payments}");
 
-                        // Thông báo cho admin
-                        var adminNotification = new Notification
-                        {
-                            AccountID = result.AccountAdminId,
-                            Title = $"Kết quả buổi đấu giá: {result.Title}",
-                            Description = $"Người thắng cuộc: {result.BidderEmail}\nGiá thắng cuộc: {result.Price}\n{bidderSuccessBody}"
-                        };
-                        await NotificationDAO.Instance.AddNotification(adminNotification);
+                        await MailUtils.SendMailGoogleSmtp(
+                            fromEmail: "nguyenanh0978638@gmail.com",
+                            toEmail: result.BidderEmail,
+                            subject: "Auction Results - Success",
+                            body: bidderSuccessBody.ToString()
+                        );
 
-                        // Thông báo cho auctioneer
-                        var auctioneerNotification = new Notification
-                        {
-                            AccountID = result.AccountAuctionId,
-                            Title = $"Kết quả buổi đấu giá: {result.Title}",
-                            Description = $"Người thắng cuộc: {result.BidderEmail}\nGiá thắng cuộc: {result.Price}\n{bidderSuccessBody}"
-                        };
-                        await NotificationDAO.Instance.AddNotification(auctioneerNotification);
+                        // Gửi email cho Auctioneer
+                        await MailUtils.SendMailGoogleSmtp(
+                            fromEmail: "nguyenanh0978638@gmail.com",
+                            toEmail: result.AuctioneerEmail,
+                            subject: "Auction Results - Success",
+                            body: GenerateAuctioneerEmailBody(result)
+                        );
 
-                        CreateAuction(RAID, DateTime.Now.AddDays(1), result.endTime, result.AccountId);
+                        // Gửi email cho Admin
+                        await MailUtils.SendMailGoogleSmtp(
+                            fromEmail: "nguyenanh0978638@gmail.com",
+                            toEmail: result.EmailAdmin,
+                            subject: "Auction Results - Success",
+                            body: GenerateAdminEmailBody(result)
+                        );
+
+                        RegistAuctionDAO.Instance.UpdateInforPayment(id);
+                        var RAID = await AuctionDAO.Instance.UpdateWinningStatus(id);
+
+                        // Tạo thông báo cho người thua cuộc
+                        var checkuser = await AuctionDAO.Instance.InformationOfTheLoser(RAID, id);
+                        if (checkuser != null)
+                        {
+                            foreach (var item in checkuser)
+                            {
+                                var notifications = new Notification
+                                {
+                                    AccountID = item,
+                                    Title = $"Kết quả buổi đấu giá: {result.Title}",
+                                    Description = "Xin chia buồn với bạn đã không đấu giá được sản phẩm với mức giá mong muốn."
+                                };
+                                await NotificationDAO.Instance.AddNotification(notifications);
+                            }
+                        }
+                        else
+                        {
+                            var notificationForBidder = new Notification
+                            {
+                                AccountID = result.AccountId,
+                                Title = $"Kết quả buổi đấu giá: {result.Title}",
+                                Description = bidderSuccessBody.ToString()
+                            };
+                            await NotificationDAO.Instance.AddNotification(notificationForBidder);
+
+                            // Thông báo cho admin
+                            var adminNotification = new Notification
+                            {
+                                AccountID = result.AccountAdminId,
+                                Title = $"Kết quả buổi đấu giá: {result.Title}",
+                                Description = $"Người thắng cuộc: {result.BidderEmail}\nGiá thắng cuộc: {result.Price}\n{bidderSuccessBody}"
+                            };
+                            await NotificationDAO.Instance.AddNotification(adminNotification);
+
+                            // Thông báo cho auctioneer
+                            var auctioneerNotification = new Notification
+                            {
+                                AccountID = result.AccountAuctionId,
+                                Title = $"Kết quả buổi đấu giá: {result.Title}",
+                                Description = $"Người thắng cuộc: {result.BidderEmail}\nGiá thắng cuộc: {result.Price}\n{bidderSuccessBody}"
+                            };
+                            await NotificationDAO.Instance.AddNotification(auctioneerNotification);
+
+                            CreateAuction(RAID, DateTime.Now.AddDays(1), result.endTime, result.AccountId);
+                        }
                     }
                 }
                 else
@@ -322,7 +326,7 @@ namespace DataAccess.Service
                             fromEmail: "nguyenanh0978638@gmail.com",
                             toEmail: result.AuctioneerEmail,
                             subject: "Auction Results - Failure",
-                            body: $"{failureMessage} Thông tin chi tiết: {GenerateAuctioneerEmailBody(result)}"
+                            body: $"{failureMessage} Thông tin chi tiết: {GenerateAuctioneerFailureEmailBody(result)}"
                         );
                     }
 
@@ -333,7 +337,7 @@ namespace DataAccess.Service
                             fromEmail: "nguyenanh0978638@gmail.com",
                             toEmail: result.EmailAdmin,
                             subject: "Auction Results - Failure",
-                            body: $"{failureMessage} Thông tin chi tiết: {GenerateAdminEmailBody(result)}"
+                            body: $"{failureMessage} Thông tin chi tiết: {GenerateAuctioneerFailureEmailBody(result)}"
                         );
                     }
                     var adminNotification = new Notification

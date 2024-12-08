@@ -9,7 +9,7 @@ const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const { login, handleSuccess } = useAuth();
+  const { login, handleSuccess, handleFailure } = useAuth();
   const { setIsLoading } = useLoading();
   const { setSuccessMessage, setErrorMessage } = useMessage();
   const GOOGLE_CLIENT_ID =

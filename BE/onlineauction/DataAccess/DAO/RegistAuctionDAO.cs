@@ -64,10 +64,13 @@ namespace DataAccess.DAO
             {
                 using (var context = new ConnectDB())
                 {
-                    var check = context.RegistAuctioneers.Where(x => x.ListAuctionID == registAuction.ListAuctionID && x.AccountID == registAuction.AccountID).ToList();
-                    if (check.Any())
+                    var check = context.RegistAuctioneers.Where(x => x.ListAuctionID == registAuction.ListAuctionID && x.AccountID == registAuction.AccountID).FirstOrDefault();
+                    if (check != null)
                     {
-                        return new ResponseDTO { IsSucceed = false, Message = "You have registered for this auction." };
+                        var checkPay = context.Deposits.Where(p => p.RAID == check.RAID).FirstOrDefault();
+                        context.Deposits.Remove(checkPay);
+                        context.RegistAuctioneers.Remove(check);
+                        await context.SaveChangesAsync();
                     }
                     context.RegistAuctioneers.Add(registAuction);
                     await context.SaveChangesAsync();
