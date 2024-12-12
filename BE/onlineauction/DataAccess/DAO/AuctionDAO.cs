@@ -189,6 +189,7 @@ namespace DataAccess.DAO
                                                 Img = a.Image,
                                                 Name = a.NameAuction,
                                                 StartDay = ad.StartDay,
+                                                TimePerLap = ad.TimePerLap,
                                                 StartTime = ad.StartTime,
                                                 EndDay = ad.EndDay,
                                                 EndTime = ad.EndTime,

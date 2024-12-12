@@ -53,7 +53,7 @@ namespace DataAccess.Repository
                     AutioneerID = autioneer.AutioneerID,
                     Status = autioneer.Status,
                     TimeRoom = autioneer.TimeRoom,
-                    evidenceFile = $"http://capstoneauctioneer.runasp.net/api/read?filePath={await _upload.SaveFileAsync(autioneer.evidenceFile, "Approve", idAuction)}",
+                    evidenceFile = autioneer.evidenceFile != null ? $"http://capstoneauctioneer.runasp.net/api/read?filePath={await _upload.SaveFileAsync(autioneer.evidenceFile, "Approve", idAuction)}" : null,
                 };
                 await AuctionDAO.Instance.AcceptAuctioneerForAdmin(data, idAuction);
                 return new ResponseDTO { IsSucceed = true, Message = "successfully" };
