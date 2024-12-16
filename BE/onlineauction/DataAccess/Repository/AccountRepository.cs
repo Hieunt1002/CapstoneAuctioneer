@@ -457,7 +457,7 @@ namespace DataAccess.Repository
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
             // Tạo đường link đặt lại mật khẩu
-            var resetLink = $"https://auction-fe-nu.vercel.app/resetPasswordPage/{code}/{account.Email}";
+            var resetLink = $"https://oas-fe.vercel.app/resetPasswordPage/{code}/{account.Email}";
 
             // Gửi email chứa đường link đặt lại mật khẩu
             await MailUtils.SendMailGoogleSmtp(

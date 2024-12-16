@@ -235,7 +235,7 @@ namespace DataAccess.Service
                                 ? result.Title.Substring(0, 10)
                                 : result.Title;
                         var expirationTime = DateTime.Now.AddHours(24).ToString("yyyy-MM-dd HH:mm:ss");
-                        PaymentData paymentData = new PaymentData(orderCode, (int)result.Price, $"Thanh Toán {shortenedName}", items, "https://auction-fe-nu.vercel.app/cancel", "https://auction-fe-nu.vercel.app/success", expirationTime);
+                        PaymentData paymentData = new PaymentData(orderCode, (int)result.Price, $"Thanh Toán {shortenedName}", items, "https://oas-fe.vercel.app/cancel", "https://oas-fe.vercel.app/success", expirationTime);
                         CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
                         var payments = GetResetPasswordEmailContent(createPayment.checkoutUrl.ToString());
                         // Gửi email cho Bidder

@@ -28,5 +28,6 @@ namespace DataAccess.DTO
         public int countBidder { get; set; }
         public List<Image> images { get; set; }
         public string createDate { get; set; }
+        public string evidenceFile { get; set; }
     }
 }

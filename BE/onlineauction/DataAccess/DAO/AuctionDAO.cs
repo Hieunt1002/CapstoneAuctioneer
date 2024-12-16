@@ -936,6 +936,7 @@ namespace DataAccess.DAO
                                                                 .Select(t => new Image { img = t.Imange })
                                                         ).ToList(),
                                             createDate = ad.CreateDate.ToString("dd/MM/yyyy"),
+                                            evidenceFile = ad.evidenceFile,
                                         }).FirstOrDefaultAsync();
 
                     return result;

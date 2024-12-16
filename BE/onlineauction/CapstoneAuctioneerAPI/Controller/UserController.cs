@@ -182,7 +182,7 @@ namespace CapstoneAuctioneerAPI.Controller
                     ? deposit.nameAuction.Substring(0, 10)
                     : deposit.nameAuction;
             var expirationTime = DateTime.Now.AddMinutes(15).ToString("yyyy-MM-dd HH:mm:ss");
-            PaymentData paymentData = new PaymentData(did, deposit.priceAuction, $"Tiền Cọc {shortenedName}", items, "https://auction-fe-nu.vercel.app/cancel", "https://auction-fe-nu.vercel.app/success", expirationTime);
+            PaymentData paymentData = new PaymentData(did, deposit.priceAuction, $"Tiền Cọc {shortenedName}", items, "https://oas-fe.vercel.app/cancel", "https://oas-fe.vercel.app/success", expirationTime);
             CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
             return Ok(createPayment.checkoutUrl);
         }

@@ -101,6 +101,7 @@ namespace DataAccess.Repository
                     countdowntime = formattedTimeRemaining, // Nếu không có ngày/giờ, giá trị sẽ là ""
                     images = result.images,
                     createDate = result.createDate,
+                    evidenceFile= result.evidenceFile,
                 };
 
                 return auction;
